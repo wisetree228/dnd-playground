@@ -1,0 +1,124 @@
+/*
+  Для корректного отображения шрифтов 'Orbitron' и 'Share Tech Mono'
+  их необходимо импортировать в ваш проект. Например, добавьте эти строки
+  в ваш основной CSS-файл (src/index.css) или в секцию <head> public/index.html:
+
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap');
+*/
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap');
+
+.landing-page-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh; /* Занимает всю высоту видимой области */
+  background-color: #0A0015; /* Очень темный, почти черный с фиолетовым оттенком */
+  color: #CCEEFF; /* Светлый фиолетово-голубой текст */
+  font-family: 'Orbitron', sans-serif; /* Основной футуристический шрифт */
+  overflow: hidden; /* Предотвращает прокрутку от декораций */
+}
+
+.landing-main-content {
+  flex-grow: 1; /* Занимает доступное пространство, прижимая футер к низу */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  position: relative;
+  z-index: 1; /* Гарантирует, что контент поверх фона */
+}
+
+.landing-title {
+  font-size: 3.5em;
+  font-weight: 700;
+  letter-spacing: 3px;
+  margin-bottom: 15px;
+
+  /* Градиентный текст с эффектом свечения */
+  background: linear-gradient(90deg, #A75DFF, #CCEEFF, #A75DFF); /* Фиолетово-голубой градиент */
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text; /* Стандарт */
+  color: transparent; /* Fallback */
+  text-shadow: 0 0 20px rgba(175, 93, 255, 0.7); /* Сильное фиолетовое свечение */
+}
+
+.landing-subtitle {
+  font-family: 'Share Tech Mono', monospace; /* Моноширинный шрифт для tech-вида */
+  font-size: 1.2em;
+  margin-bottom: 50px;
+  color: #E0BBE4; /* Мягкий фиолетовый для подзаголовка */
+  letter-spacing: 1px;
+}
+
+.button-group {
+  display: flex;
+  gap: 30px; /* Расстояние между кнопками */
+  z-index: 2; /* Убедимся, что кнопки над фоновыми элементами */
+}
+.action-button {
+  padding: 18px 35px;
+  font-size: 1.3em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  cursor: pointer;
+  border: 2px solid #A75DFF; /* Фиолетовая рамка */
+  border-radius: 8px;
+  background-color: rgba(167, 93, 255, 0.1); /* Полупрозрачный фиолетовый фон */
+  color: #CCEEFF; /* Светлый текст */
+  font-family: 'Orbitron', sans-serif;
+  transition: all 0.3s ease; /* Плавные переходы */
+  box-shadow: 0 0 15px rgba(175, 93, 255, 0.4); /* Мягкое свечение */
+  outline: none; /* Убираем стандартную обводку при фокусе */
+}
+
+.action-button:hover,
+.action-button:focus {
+  background-color: rgba(167, 93, 255, 0.25); /* Более насыщенный фон при наведении/фокусе */
+  color: #FFFFFF; /* Белый текст */
+  border-color: #CCEEFF; /* Светлая рамка */
+  box-shadow: 0 0 25px rgba(204, 238, 255, 0.7), 0 0 40px rgba(175, 93, 255, 0.5); /* Более сильное свечение */
+  transform: translateY(-5px); /* Небольшой подъем */
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .landing-title {
+    font-size: 2.5em;
+    letter-spacing: 2px;
+  }
+
+  .landing-subtitle {
+    font-size: 1em;
+    margin-bottom: 30px;
+  }
+
+  .button-group {
+    flex-direction: column; /* Кнопки в столбик на маленьких экранах */
+    gap: 20px;
+  }
+
+  .action-button {
+    padding: 15px 25px;
+    font-size: 1.1em;
+    width: 80%; /* Занимают большую часть ширины */
+    max-width: 300px;
+  }
+}
+
+@media (max-width: 480px) {
+  .landing-title {
+    font-size: 2em;
+  }
+
+  .landing-subtitle {
+    font-size: 0.9em;
+  }
+
+  .action-button {
+    font-size: 1em;
+    padding: 12px 20px;
+  }
+}

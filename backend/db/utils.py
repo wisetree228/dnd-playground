@@ -34,3 +34,7 @@ async def get_user_by_username(username: str, db: AsyncSession):
     return user
 
 
+async def get_user_fields(user_id: int, db: AsyncSession):
+    res = await db.execute(select(Field).where(Field.author_id == user_id))
+    return res.scalars().all()
+

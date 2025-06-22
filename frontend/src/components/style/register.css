@@ -1,0 +1,149 @@
+/* src/pages/style/register.css */
+
+/* Общие стили для страницы */
+.register-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: #1a0a2e; /* Очень темный фиолетовый фон */
+  color: #e0e0e0; /* Светлый текст для контраста */
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Современный шрифт */
+  padding: 20px;
+  box-sizing: border-box; /* Учитываем padding в общей ширине/высоте */
+}
+
+/* Стили для заголовка страницы */
+.register-header {
+  text-align: center;
+  margin-bottom: 40px;
+  padding-top: 30px;
+}
+
+.register-header .page-title {
+  font-size: 2.8em;
+  color: #9370DB; /* MediumPurple */
+  text-shadow: 0 0 15px rgba(147, 112, 219, 0.6); /* Легкое свечение */
+  letter-spacing: 1.5px;
+}
+
+/* Основное содержимое страницы (форма) */
+.register-main-content {
+  flex-grow: 1; /* Позволяет содержимому занимать доступное пространство */
+  display: flex;
+  justify-content: center;
+  align-items: center; /* Центрирование формы по вертикали */
+  padding: 20px 0;
+}
+
+/* Контейнер формы */
+.register-form {
+  background: #2a104e; /* Чуть светлее фон для формы */
+  padding: 40px;
+  border-radius: 15px; /* Более скругленные углы */
+  box-shadow: 0 0 30px rgba(138, 43, 226, 0.4); /* Фиолетовое свечение вокруг формы */
+  width: 100%;
+  max-width: 450px; /* Ограничиваем ширину формы */
+  display: flex;
+  flex-direction: column;
+  gap: 25px; /* Промежутки между элементами формы */
+  border: 1px solid rgba(138, 43, 226, 0.3); /* Тонкая фиолетовая рамка */
+}
+
+/* Группа полей ввода (label + input) */
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-size: 1.1em;
+  margin-bottom: 8px;
+  color: #B2A4D4; /* Светло-фиолетовый для меток */
+  font-weight: 500;
+}
+
+.form-group input {
+  padding: 14px 18px;
+  border: 1px solid #5a2e8c; /* Темно-фиолетовая рамка */
+  border-radius: 8px;
+  background-color: #3a156e; /* Еще более темный фон для инпутов */
+  color: #e0e0e0;
+  font-size: 1.05em;
+  outline: none; /* Убираем стандартную обводку */
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.form-group input::placeholder {
+  color: #9987B5; /* Светло-фиолетовый плейсхолдер */
+  opacity: 0.7; /* Прозрачность */
+}
+
+.form-group input:focus {
+  border-color: #8A2BE2; /* BlueViolet при фокусе */
+  box-shadow: 0 0 12px rgba(138, 43, 226, 0.6); /* Свечение при фокусе */
+  background-color: #4a1c8c; /* Чуть светлее при фокусе */
+}
+
+/* Кнопка регистрации */
+.register-button {
+  background: linear-gradient(45deg, #8A2BE2, #7B68EE); /* Градиент от BlueViolet до MediumSlateBlue */
+  color: white;
+  padding: 15px 25px;
+  border: none;
+  border-radius: 10px;
+  font-size: 1.2em;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 20px rgba(138, 43, 226, 0.4); /* Тень для эффекта парения */
+  margin-top: 20px; /* Отступ сверху */
+}
+
+.register-button:hover {
+  background: linear-gradient(45deg, #7B68EE, #8A2BE2); /* Инвертированный градиент при наведении */
+  transform: translateY(-3px); /* Легкий подъем */
+  box-shadow: 0 12px 25px rgba(138, 43, 226, 0.6); /* Усиленная тень */
+}
+
+.register-button:active {
+  transform: translateY(0); /* Возврат при нажатии */
+  box-shadow: 0 4px 10px rgba(138, 43, 226, 0.3); /* Меньшая тень при нажатии */
+}
+
+/* Сообщение об ошибке */
+.error-message {
+  color: #FF6347; /* Tomato - яркий красный для ошибок */
+  background-color: rgba(255, 99, 71, 0.15); /* Полупрозрачный красный фон */
+  border: 1px solid #FF6347;
+  padding: 10px 15px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  font-size: 0.95em;
+  text-align: center;
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 600px) {
+  .register-page {
+    padding: 10px;
+  }
+
+  .register-header .page-title {
+    font-size: 2em;
+  }
+
+  .register-form {
+    padding: 25px;
+    gap: 18px;
+  }
+
+  .form-group input,
+  .register-button {
+    padding: 12px 15px;
+    font-size: 1em;
+  }
+
+  .form-group label {
+    font-size: 1em;
+  }
+}

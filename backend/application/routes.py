@@ -39,7 +39,7 @@ async def example() -> dict:
 
 @router.post('/register')
 async def submit_form(
-    data: RegisterFormData, db: SessionDep
+    data: RegisterFormData, db: SessionDep, response: Response
 ) -> dict:
     """
     Регистрирует нового пользователя.
@@ -51,7 +51,7 @@ async def submit_form(
     Returns:
         dict: Результат регистрации.
     """
-    return await register_view(data=data, db=db)
+    return await register_view(data=data, db=db, response=response)
 
 
 @router.post('/login')
@@ -99,6 +99,16 @@ async def logout(response: Response) -> dict:
     """
     response.delete_cookie(config.JWT_ACCESS_COOKIE_NAME)
     return {"status": "ok"}
+
+
+@router.get('/my_fields', dependencies=[Depends(security.access_token_required)])
+async def get_my_fields(db: SessionDep, user_id: str = Depends(get_current_user_id)):
+    return await get_my_fields_view(db=db, user_id=int(user_id))
+
+
+@router.post('/fields', dependencies=[Depends(security.access_token_required)])
+async def create_field(data: CreateFieldFormData, db: SessionDep, user_id: str = Depends(get_current_user_id)):
+    return await create_field_view(data=data, db=db, user_id=int(user_id))
 
 
 

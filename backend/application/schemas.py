@@ -26,3 +26,10 @@ class EditProfileFormData(BaseModel):
     """
     username: Optional[constr(min_length=3, max_length=10000)] = None
     password: Optional[str] = None
+
+
+class CreateFieldFormData(BaseModel):
+    """
+    Схема валидации данных для регистрации нового игрового поля
+    """
+    field_name: str = Field(min_length=1, max_length=50)

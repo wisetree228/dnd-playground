@@ -1,0 +1,236 @@
+/* src/pages/style/createField.css */
+
+/* Общие стили для страницы */
+.create-field-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: #1a0a2e; /* Очень темный фиолетовый фон */
+  color: #e0e0e0; /* Светлый текст для контраста */
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Современный шрифт */
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* Стили для заголовка страницы */
+.create-field-header {
+  display: flex;
+  justify-content: space-between; /* Распределяет элементы по краям */
+  align-items: center; /* Выравнивает по центру по вертикали */
+  margin-bottom: 40px;
+  padding-top: 30px;
+  width: 100%;
+  max-width: 900px; /* Ограничиваем ширину хедера */
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.create-field-header .page-title {
+  font-size: 2.8em;
+  color: #9370DB; /* MediumPurple */
+  text-shadow: 0 0 15px rgba(147, 112, 219, 0.6); /* Легкое свечение */
+  letter-spacing: 1.5px;
+  margin: 0; /* Убираем стандартные отступы */
+}
+
+/* Кнопка "Мой Профиль" */
+.profile-button {
+  background: linear-gradient(45deg, #7B68EE, #8A2BE2); /* Градиент от MediumSlateBlue до BlueViolet */
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(138, 43, 226, 0.3); /* Тень */
+}
+
+.profile-button:hover {
+  background: linear-gradient(45deg, #8A2BE2, #7B68EE); /* Инвертированный градиент при наведении */
+  transform: translateY(-2px); /* Легкий подъем */
+  box-shadow: 0 8px 20px rgba(138, 43, 226, 0.5); /* Усиленная тень */
+}
+
+.profile-button:active {
+  transform: translateY(0);
+  box-shadow: 0 3px 10px rgba(138, 43, 226, 0.2);
+}
+
+/* Основное содержимое страницы (форма) */
+.create-field-main-content {
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 0;
+}
+
+/* Контейнер формы */
+.create-field-form {
+  background: #2a104e; /* Чуть светлее фон для формы */
+  padding: 40px;
+  border-radius: 15px;
+  box-shadow: 0 0 30px rgba(138, 43, 226, 0.4); /* Фиолетовое свечение вокруг формы */
+  width: 100%;
+  max-width: 450px; /* Ограничиваем ширину формы */
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  border: 1px solid rgba(138, 43, 226, 0.3);
+}
+
+/* Группа полей ввода (label + input) */
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-size: 1.1em;
+  margin-bottom: 8px;
+  color: #B2A4D4; /* Светло-фиолетовый для меток */
+  font-weight: 500;
+}
+
+.form-group input {
+  padding: 14px 18px;
+  border: 1px solid #5a2e8c; /* Темно-фиолетовая рамка */
+  border-radius: 8px;
+  background-color: #3a156e; /* Еще более темный фон для инпутов */
+  color: #e0e0e0;
+  font-size: 1.05em;
+  outline: none;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.form-group input::placeholder {
+  color: #9987B5;
+  opacity: 0.7;
+}
+
+.form-group input:focus {
+  border-color: #8A2BE2; /* BlueViolet при фокусе */
+  box-shadow: 0 0 12px rgba(138, 43, 226, 0.6);
+  background-color: #4a1c8c;
+}
+
+/* Кнопка "Создать Поле" */
+.create-button {
+  background: linear-gradient(45deg, #8A2BE2, #7B68EE);
+  color: white;
+  padding: 15px 25px;
+  border: none;
+  border-radius: 10px;
+  font-size: 1.2em;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 20px rgba(138, 43, 226, 0.4);
+  margin-top: 20px;
+}
+
+.create-button:hover {
+  background: linear-gradient(45deg, #7B68EE, #8A2BE2);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 25px rgba(138, 43, 226, 0.6);
+}
+
+.create-button:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 10px rgba(138, 43, 226, 0.3);
+}
+
+/* Сообщение об ошибке */
+.error-message {
+  color: #FF6347; /* Tomato - яркий красный */
+  background-color: rgba(255, 99, 71, 0.15);
+  border: 1px solid #FF6347;
+  padding: 10px 15px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  font-size: 0.95em;
+  text-align: center;
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 600px) {
+  .create-field-page {
+    padding: 10px;
+  }
+
+  .create-field-header {
+    flex-direction: column; /* Элементы хедера в столбец */
+    gap: 15px; /* Промежуток между заголовком и кнопкой */
+    text-align: center;
+  }
+
+  .create-field-header .page-title {
+    font-size: 2em;
+  }
+
+  .profile-button {
+    width: 100%; /* Кнопка занимает всю ширину */
+    max-width: 200px; /* Ограничиваем ширину */
+    margin: 0 auto; /* Центрируем */
+  }
+
+  .create-field-form {
+    padding: 25px;
+    gap: 18px;
+  }
+
+  .form-group input,
+  .create-button {
+    padding: 12px 15px;
+    font-size: 1em;
+  }
+
+  .form-group label {
+    font-size: 1em;
+  }
+    .header-buttons {
+    flex-direction: column; /* Кнопки в столбец */
+    width: 100%; /* Занимают всю ширину */
+  }
+
+  /* НОВЫЕ СТИЛИ: Кнопки "Мой Профиль" и "Главная Страница" на мобильных */
+  .profile-button,
+  .home-button {
+    width: 100%; /* Каждая кнопка занимает всю доступную ширину контейнера */
+    max-width: 200px; /* Ограничиваем ширину для эстетики */
+    margin: 0 auto; /* Центрируем кнопки */
+  }
+}
+
+.header-buttons {
+  display: flex;
+  gap: 15px; /* Пространство между кнопками */
+  align-items: center;
+}
+
+/* НОВЫЕ СТИЛИ: Кнопка "Главная Страница" */
+.home-button {
+  background: linear-gradient(45deg, #A779E1, #B58AE2); /* Более светлый фиолетовый градиент */
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(167, 121, 225, 0.3); /* Тень, соответствующая градиенту */
+}
+
+.home-button:hover {
+  background: linear-gradient(45deg, #B58AE2, #A779E1); /* Инвертированный градиент при наведении */
+  transform: translateY(-2px); /* Легкий подъем */
+  box-shadow: 0 8px 20px rgba(167, 121, 225, 0.5); /* Усиленная тень */
+}
+
+.home-button:active {
+  transform: translateY(0);
+  box-shadow: 0 3px 10px rgba(167, 121, 225, 0.2);
+}
