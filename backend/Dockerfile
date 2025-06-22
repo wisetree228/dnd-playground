@@ -6,7 +6,7 @@ RUN pip install --upgrade setuptools
 
 COPY requirements.txt .
 RUN pip install -r requirements.txt
-RUN pip install websockets
+RUN pip install alembic
 
 COPY . .
 

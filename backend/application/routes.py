@@ -2,30 +2,15 @@
 Модуль routes.py содержит маршруты FastAPI для обработки HTTP-запросов и WebSocket-соединений.
 """
 from typing import Generator, Annotated
-from fastapi import Response, WebSocket, APIRouter, Depends, UploadFile, Query
+from fastapi import Response, APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from backend.db.models import engine
-from .utils import get_current_user_id, WebSocketConnectionManager
+from .utils import *
 from .config import security, config
-from .views import (
-    register_view, login_view, create_post_view, create_comment_view,
-    create_friendship_request_view, edit_profile_view, create_or_delete_like_view,
-    vote_view, handle_websocket, add_media_to_post_view, get_posts_view,
-    get_post_img_view, get_post_view, edit_post_view, delete_post_view, delete_comment_view,
-    delete_vote_view, delete_message_view, change_avatar_view, get_avatar_view,
-    get_chat_view, get_users_posts_view, get_my_page_view,
-    get_other_page_view, get_is_friend_view, get_friends_view, delete_friend_view,
-    get_friendship_requests_view, delete_friendship_request_view,
-    delete_post_image_view, complaint_post_view, complaint_comment_view, get_voted_users_view
-)
-
-from .schemas import (
-    RegisterFormData, LoginFormData, CreatePostData, CreateCommentData, EditProfileFormData,
-    EditPostData
-)
+from .views import *
+from .schemas import *
 
 router = APIRouter()
-manager = WebSocketConnectionManager()
 SessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 
 async def get_db() -> Generator[AsyncSession, None, None]:

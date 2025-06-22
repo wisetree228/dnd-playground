@@ -3,7 +3,7 @@ View-функции для обработки всех запросов
 """
 import json
 from io import BytesIO
-from fastapi import HTTPException
+from fastapi import HTTPException, Response
 from fastapi.responses import StreamingResponse, FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
@@ -28,24 +28,15 @@ async def register_view(data: RegisterFormData, db: AsyncSession) -> dict:
         dict: Статус операции.
     """
     db_user_by_username = await get_user_by_username(data.username, db)
-    db_user_by_email = await get_user_by_email(data.email, db)
 
     if db_user_by_username:
         raise HTTPException(
             status_code=400,
             detail="Пользователь с таким юзернеймом уже существует."
         )
-    if db_user_by_email:
-        raise HTTPException(
-            status_code=400,
-            detail="Пользователь с таким email уже существует."
-        )
 
     new_user = User(
         username=data.username,
-        email=data.email,
-        name=data.name,
-        surname=data.surname,
         password=hash_password(data.password)
     )
     await add_and_refresh_object(new_user, db)
@@ -65,12 +56,7 @@ async def login_view(data: LoginFormData, response: Response, db: AsyncSession) 
     Returns:
         dict: Токен аутентификации.
     """
-    user = await get_user_by_email(data.email, db)
-    if not user:
-        raise HTTPException(
-            status_code=400,
-            detail="Пользователя с таким email не существует! Зарегистрируйтесь, пожалуйста."
-        )
+    user = await get_user_by_username(data.username, db)
     if not verify_password(user.password, data.password):
         raise HTTPException(status_code=400, detail="Неверный пароль!")
 
