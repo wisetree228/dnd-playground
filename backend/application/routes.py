@@ -2,7 +2,7 @@
 Модуль routes.py содержит маршруты FastAPI для обработки HTTP-запросов и WebSocket-соединений.
 """
 from typing import Generator, Annotated
-from fastapi import Response, APIRouter, Depends
+from fastapi import Response, APIRouter, Depends, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from backend.db.models import engine
 from .utils import *
@@ -110,5 +110,24 @@ async def get_my_fields(db: SessionDep, user_id: str = Depends(get_current_user_
 async def create_field(data: CreateFieldFormData, db: SessionDep, user_id: str = Depends(get_current_user_id)):
     return await create_field_view(data=data, db=db, user_id=int(user_id))
 
+
+@router.put('/profile', dependencies=[Depends(security.access_token_required)])
+async def edit_profile(data: EditProfileFormData, db: SessionDep, user_id: str = Depends(get_current_user_id)):
+    return await edit_profile_view(data=data, db=db, user_id=int(user_id))
+
+
+@router.get('/my_avatar', dependencies=[Depends(security.access_token_required)])
+async def get_avatar(db: SessionDep, user_id: str = Depends(get_current_user_id)):
+    return await get_avatar_view(db=db, user_id=int(user_id))
+
+
+@router.get('/profile', dependencies=[Depends(security.access_token_required)])
+async def get_profile(db: SessionDep, user_id: str = Depends(get_current_user_id)):
+    return await get_profile_view(db=db, user_id=int(user_id))
+
+
+@router.post('/avatar', dependencies=[Depends(security.access_token_required)])
+async def change_avatar(db: SessionDep, uploaded_file: UploadFile, user_id: str = Depends(get_current_user_id)):
+    return await change_avatar_view(db=db, uploaded_file=uploaded_file, user_id=int(user_id))
 
 

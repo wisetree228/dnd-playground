@@ -3,7 +3,7 @@ View-функции для обработки всех запросов
 """
 import json
 from io import BytesIO
-from fastapi import HTTPException, Response
+from fastapi import HTTPException, Response, UploadFile
 from fastapi.responses import StreamingResponse, FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
@@ -83,3 +83,36 @@ async def create_field_view(data: CreateFieldFormData, db: AsyncSession, user_id
     )
     await add_and_refresh_object(new_field, db)
     return {'status':'ok'}
+
+
+async def edit_profile_view(data: EditProfileFormData, db: AsyncSession, user_id: int):
+    user = await get_object_by_id(object_type=User, id=user_id, db=db)
+    if data.username:
+        user.username = data.username
+    if data.password:
+        user.password = hash_password(data.password)
+    await db.commit()
+    await db.refresh(user)
+    return {'status':'ok'}
+
+
+async def get_avatar_view(db: AsyncSession, user_id: int):
+    user = await get_object_by_id(object_type=User, id=user_id, db=db)
+    if not user:
+        raise HTTPException(status_code=400, detail="Такого юзера не существует")
+    if not user.avatar:
+        return FileResponse('backend/static/avatar.png')
+    return StreamingResponse(BytesIO(user.avatar), media_type='image/png')
+
+
+async def get_profile_view(db: AsyncSession, user_id: int):
+    user = await get_object_by_id(object_type=User, id=user_id, db=db)
+    return {'username':user.username}
+
+
+async def change_avatar_view(uploaded_file: UploadFile, user_id: int, db: AsyncSession):
+    user = await get_object_by_id(object_type=User, id=user_id, db=db)
+    file_bytes = await uploaded_file.read()
+    user.avatar = file_bytes
+    await db.commit()
+    return {'status': 'ok'}

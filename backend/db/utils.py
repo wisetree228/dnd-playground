@@ -38,3 +38,21 @@ async def get_user_fields(user_id: int, db: AsyncSession):
     res = await db.execute(select(Field).where(Field.author_id == user_id))
     return res.scalars().all()
 
+
+async def get_object_by_id(
+        object_type: Type[Base],
+        id: int, db: AsyncSession
+):
+    """
+    Получает обьект из бд по id
+
+    Args:
+        object_type: модель обьекта
+        id (int): id обьекта
+        db (AsyncSession): сессия бд
+    Returns:
+        обьект
+    """
+    result = await db.execute(select(object_type).filter(object_type.id==id))
+    return result.scalars().first()
+
