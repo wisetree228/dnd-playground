@@ -28,6 +28,7 @@ class User(Base):
     avatar = Column(LargeBinary)
 
     fields = relationship("Field", back_populates="author", cascade="all, delete-orphan")
+    accesses = relationship("Access", back_populates="user", cascade="all, delete-orphan")
     created_at = Column(DateTime, default=datetime.now)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
@@ -42,6 +43,19 @@ class Field(Base):
     data = Column(JSONB)
     author_id = Column(Integer, ForeignKey('users.id'), nullable=False)
 
+    accesses = relationship("Access", back_populates="field", cascade="all, delete-orphan")
     author = relationship("User", back_populates="fields")
     created_at = Column(DateTime, default=datetime.now)
 
+
+class Access(Base):
+    """
+    Модель доступа игрока к канвасу
+    """
+    __tablename__ = 'access'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    field_id = Column(Integer, ForeignKey('fields.id'), nullable=False)
+
+    user = relationship("User", back_populates="accesses")
+    field = relationship("Field", back_populates="accesses")

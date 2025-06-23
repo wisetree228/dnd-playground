@@ -9,6 +9,7 @@ from .utils import *
 from .config import security, config
 from .views import *
 from .schemas import *
+import socketio
 
 router = APIRouter()
 SessionLocal = async_sessionmaker(engine, expire_on_commit=False)
@@ -129,5 +130,10 @@ async def get_profile(db: SessionDep, user_id: str = Depends(get_current_user_id
 @router.post('/avatar', dependencies=[Depends(security.access_token_required)])
 async def change_avatar(db: SessionDep, uploaded_file: UploadFile, user_id: str = Depends(get_current_user_id)):
     return await change_avatar_view(db=db, uploaded_file=uploaded_file, user_id=int(user_id))
+
+
+@router.get('/field/{field_id}', dependencies=[Depends(security.access_token_required)])
+async def get_field(db: SessionDep, field_id: int, user_id: str = Depends(get_current_user_id)):
+    pass
 
 
