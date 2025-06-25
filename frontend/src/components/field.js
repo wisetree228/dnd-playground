@@ -1,184 +1,226 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { fabric } from 'fabric';
-import io from 'socket.io-client';
+import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { fabric } from 'fabric';
 import Footer from './footer';
 import './style/canvas.css';
 import { API_BASE_URL } from '../config';
 
 const CanvasPage = () => {
-  const navigate = useNavigate();
-  const canvasRef = useRef(null);
-  const fabricCanvasRef = useRef(null);
-  const socketRef = useRef(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState('connecting');
-  const { id } = useParams();
+    const { id } = useParams();
+    const navigate = useNavigate();
+    const canvasRef = useRef(null);
+    const fabricCanvas = useRef(null);
+    const [brushColor, setBrushColor] = useState('black');
+    const [brushSize, setBrushSize] = useState(5);
+    const [isDrawing, setIsDrawing] = useState(false);
+    const [lastPointer, setLastPointer] = useState({ x: 0, y: 0 });
 
-  // Инициализация canvas и подключение к Socket.io
-  useEffect(() => {
-    const canvas = new fabric.Canvas('canvas', {
-      width: 800,
-      height: 600,
-      selection: true,
-      backgroundColor: '#ffffff',
-    });
-    fabricCanvasRef.current = canvas;
-
-    // Подключение к Socket.io
-    const socket = io(`${API_BASE_URL}/socket/${id}`, {
-      withCredentials: true,
-      transports: ['websocket'],
-    });
-    socketRef.current = socket;
-
-    socket.on('connect', () => {
-      setConnectionStatus('connected');
-      console.log('Connected to socket server');
+    // Инициализация canvas и загрузка данных
+    useEffect(() => {
+        // Инициализация Fabric.js canvas
+        fabricCanvas.current = new fabric.Canvas(canvasRef.current, {
+        width: 800,
+        height: 600,
+        backgroundColor: 'lightgreen',
+        isDrawingMode: false,
+        selection: false, // Отключаем выделение объектов
+        defaultCursor: 'crosshair' // Устанавливаем курсор в виде крестика
     });
 
-    socket.on('disconnect', () => {
-      setConnectionStatus('disconnected');
-      console.log('Disconnected from socket server');
-    });
+        // Рисование сетки
+        drawGrid(fabricCanvas.current);
 
-    // Загрузка начального состояния canvas
-    const loadCanvas = async () => {
-      try {
-        const response = await axios.get('/api/canvas');
-        if (response.data === null || response.data.objects === undefined) {
-          // Создаем новый canvas с сеткой, если данных нет
-          initializeGridCanvas(canvas);
-        } else {
-          // Загружаем существующий canvas
-          canvas.loadFromJSON(response.data, () => {
-            canvas.renderAll();
-          });
-        }
-      } catch (error) {
-        console.error('Error loading canvas:', error);
-        initializeGridCanvas(canvas);
-      }
-    };
+        // Загрузка сохраненных данных
+        loadCanvasData(fabricCanvas.current);
 
-    loadCanvas();
+        // Настройка событий
+        const setupEventListeners = () => {
+            fabricCanvas.current.on('mouse:down', (options) => {
+                setIsDrawing(true);
+                setLastPointer(options.absolutePointer);
+            });
 
-    // Слушаем обновления canvas от других пользователей
-    socket.on('canvas_updated', (data) => {
-      if (fabricCanvasRef.current) {
-        fabricCanvasRef.current.loadFromJSON(data, () => {
-          fabricCanvasRef.current.renderAll();
+            fabricCanvas.current.on('mouse:move', (options) => {
+                if (!isDrawing) return;
+                const pointer = options.absolutePointer;
+                
+                const line = new fabric.Line(
+                    [lastPointer.x, lastPointer.y, pointer.x, pointer.y],
+                    {
+                        strokeWidth: brushSize,
+                        stroke: brushColor,
+                        selectable: false,
+                        evented: false
+                    }
+                );
+                fabricCanvas.current.add(line);
+                setLastPointer(pointer);
+            });
+
+            fabricCanvas.current.on('mouse:up', () => {
+                setIsDrawing(false);
+            });
+        };
+
+        setupEventListeners();
+
+        // Очистка при размонтировании
+        return () => {
+            if (fabricCanvas.current) {
+                fabricCanvas.current.off('mouse:down');
+                fabricCanvas.current.off('mouse:move');
+                fabricCanvas.current.off('mouse:up');
+                
+                // Более безопасный способ очистки
+                if (fabricCanvas.current.wrapperEl && fabricCanvas.current.wrapperEl.parentNode) {
+                    fabricCanvas.current.dispose();
+                }
+                fabricCanvas.current = null;
+            }
+        };
+    }, [id]);
+
+    // Обновление обработчиков событий при изменении параметров кисти
+    useEffect(() => {
+        if (!fabricCanvas.current) return;
+
+        fabricCanvas.current.off('mouse:down');
+        fabricCanvas.current.off('mouse:move');
+        fabricCanvas.current.off('mouse:up');
+
+        fabricCanvas.current.on('mouse:down', (options) => {
+            setIsDrawing(true);
+            setLastPointer(options.absolutePointer);
         });
-      }
-    });
 
-    // Отправляем изменения на сервер при любом изменении canvas
-    canvas.on('object:modified', handleCanvasChange);
-    canvas.on('object:added', handleCanvasChange);
-    canvas.on('object:removed', handleCanvasChange);
-
-    return () => {
-      canvas.dispose();
-      socket.disconnect();
-    };
-  }, []);
-
-  // Инициализация canvas с сеткой
-  const initializeGridCanvas = (canvas) => {
-    canvas.setBackgroundColor('#1e8540', () => {
-      // Создаем сетку 20x20
-      const gridSize = 20;
-      const width = canvas.getWidth();
-      const height = canvas.getHeight();
-      
-      // Вертикальные линии
-      for (let i = 0; i < width; i += gridSize) {
-        const line = new fabric.Line([i, 0, i, height], {
-          stroke: 'rgba(255, 255, 255, 0.2)',
-          strokeWidth: 1,
-          selectable: false,
-          evented: false,
+        fabricCanvas.current.on('mouse:move', (options) => {
+            if (!isDrawing) return;
+            const pointer = options.absolutePointer;
+            
+            const line = new fabric.Line(
+                [lastPointer.x, lastPointer.y, pointer.x, pointer.y],
+                {
+                    strokeWidth: brushSize,
+                    stroke: brushColor,
+                    selectable: false,
+                    evented: false
+                }
+            );
+            fabricCanvas.current.add(line);
+            setLastPointer(pointer);
         });
-        canvas.add(line);
-      }
-      
-      // Горизонтальные линии
-      for (let i = 0; i < height; i += gridSize) {
-        const line = new fabric.Line([0, i, width, i], {
-          stroke: 'rgba(255, 255, 255, 0.2)',
-          strokeWidth: 1,
-          selectable: false,
-          evented: false,
+
+        fabricCanvas.current.on('mouse:up', () => {
+            setIsDrawing(false);
         });
-        canvas.add(line);
-      }
-      
-      canvas.renderAll();
-    });
-  };
+    }, [brushColor, brushSize, isDrawing, lastPointer]);
 
-  // Обработчик изменений canvas
-  const handleCanvasChange = () => {
-    if (socketRef.current && socketRef.current.connected) {
-      const jsonData = fabricCanvasRef.current.toJSON();
-      socketRef.current.emit('canvas_update', jsonData);
-    }
-  };
-
-  // Сохранение canvas в базу данных
-  const handleSaveCanvas = async () => {
-    try {
-      setIsSaving(true);
-      const jsonData = fabricCanvasRef.current.toJSON();
-      await axios.post('/api/canvas/save', jsonData);
-      console.log('Canvas saved successfully');
-    } catch (error) {
-      console.error('Error saving canvas:', error);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  return (
-    <div className="canvas-page">
-      <header className="canvas-header">
-        <button 
-          className="nav-button profile-button"
-          onClick={() => navigate('/profile')}
-        >
-          Мой профиль
-        </button>
-        <button 
-          className="nav-button home-button"
-          onClick={() => navigate('/home')}
-        >
-          Вернуться на главную
-        </button>
-      </header>
-
-      <div className="canvas-container">
-        <div className="canvas-wrapper">
-          <canvas id="canvas" ref={canvasRef} />
-          <div className={`connection-status ${connectionStatus}`}>
-            Статус: {connectionStatus === 'connected' ? 'Подключено' : 'Нет соединения'}
-          </div>
-        </div>
+    const drawGrid = (canvas) => {
+        if (!canvas) return;
         
-        <div className="canvas-controls">
-          <button 
-            className="save-button"
-            onClick={handleSaveCanvas}
-            disabled={isSaving}
-          >
-            {isSaving ? 'Сохранение...' : 'Сохранить в базу данных'}
-          </button>
-        </div>
-      </div>
+        canvas.clear();
+        const background = new fabric.Rect({
+            left: 0,
+            top: 0,
+            fill: 'lightgreen',
+            width: canvas.width,
+            height: canvas.height,
+            selectable: false,
+            evented: false
+        });
+        canvas.add(background);
 
-      <Footer />
-    </div>
-  );
+        // Вертикальные линии
+        for (let i = 0; i < canvas.width; i += 20) {
+            canvas.add(new fabric.Line([i, 0, i, canvas.height], {
+                stroke: 'rgba(0,0,0,0.1)',
+                selectable: false,
+                evented: false
+            }));
+        }
+        
+        // Горизонтальные линии
+        for (let j = 0; j < canvas.height; j += 20) {
+            canvas.add(new fabric.Line([0, j, canvas.width, j], {
+                stroke: 'rgba(0,0,0,0.1)',
+                selectable: false,
+                evented: false
+            }));
+        }
+    };
+
+    const loadCanvasData = async () => {
+        if (!fabricCanvas.current) return;
+        
+        try {
+            const response = await axios.get(`${API_BASE_URL}/field/${id}`, { withCredentials: true });
+            if (response.data === null) {
+                drawGrid(fabricCanvas.current);
+            } else {
+                fabricCanvas.current.loadFromJSON(response.data, () => {
+                    fabricCanvas.current.setBackgroundColor('lightgreen', () => {
+                        fabricCanvas.current.renderAll();
+                    });
+                });
+            }
+        } catch (error) {
+            console.error("Ошибка загрузки данных:", error);
+            drawGrid(fabricCanvas.current);
+        }
+    };
+
+    const saveCanvasData = async () => {
+        if (!fabricCanvas.current) return;
+        
+        try {
+            const jsonData = fabricCanvas.current.toJSON();
+            await axios.post(`${API_BASE_URL}/field/${id}`, { data: jsonData }, { withCredentials: true });
+            alert('Данные успешно сохранены!');
+        } catch (error) {
+            console.error("Ошибка сохранения данных:", error);
+            alert('Ошибка при сохранении данных!');
+        }
+    };
+
+    const handleBrushColor = (color) => {
+        setBrushColor(color);
+    };
+
+    return (
+        <div className="canvas-page">
+            <div className="navbar">
+                <button onClick={() => navigate('/profile')}>Мой профиль</button>
+                <button onClick={() => navigate('/home')}>На главную</button>
+                <button onClick={saveCanvasData}>Сохранить в базу данных</button>
+                <div className="color-selection">
+                    <button style={{ backgroundColor: 'red' }} onClick={() => handleBrushColor('red')}></button>
+                    <button style={{ backgroundColor: 'blue' }} onClick={() => handleBrushColor('blue')}></button>
+                    <button style={{ backgroundColor: 'green' }} onClick={() => handleBrushColor('green')}></button>
+                    <button style={{ backgroundColor: 'black' }} onClick={() => handleBrushColor('black')}></button>
+                </div>
+                <div>
+                    <label>Размер кисти: </label>
+                    <input 
+                        type="range" 
+                        min="1" 
+                        max="20" 
+                        value={brushSize} 
+                        onChange={(e) => setBrushSize(parseInt(e.target.value))} 
+                    />
+                    {brushSize}
+                </div>
+            </div>
+            <canvas 
+                ref={canvasRef} 
+                id="canvas" 
+                width={800} 
+                height={600} 
+                style={{ border: '1px solid #000', margin: '20px' }}
+            />
+            <Footer />
+        </div>
+    );
 };
 
 export default CanvasPage;

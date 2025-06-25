@@ -1,7 +1,7 @@
 """
 Схемы для валидации данных
 """
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, EmailStr, constr, Field
 
 
@@ -33,3 +33,7 @@ class CreateFieldFormData(BaseModel):
     Схема валидации данных для регистрации нового игрового поля
     """
     field_name: str = Field(min_length=1, max_length=50)
+
+
+class AnyJsonResponse(BaseModel):
+    data: Dict[str, Any]

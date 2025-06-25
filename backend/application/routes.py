@@ -4,6 +4,8 @@
 from typing import Generator, Annotated
 from fastapi import Response, APIRouter, Depends, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from starlette.websockets import WebSocketDisconnect
+
 from backend.db.models import engine
 from .utils import *
 from .config import security, config
@@ -13,6 +15,7 @@ import socketio
 
 router = APIRouter()
 SessionLocal = async_sessionmaker(engine, expire_on_commit=False)
+manager = ConnectionManager()
 
 async def get_db() -> Generator[AsyncSession, None, None]:
     """
@@ -134,6 +137,46 @@ async def change_avatar(db: SessionDep, uploaded_file: UploadFile, user_id: str 
 
 @router.get('/field/{field_id}', dependencies=[Depends(security.access_token_required)])
 async def get_field(db: SessionDep, field_id: int, user_id: str = Depends(get_current_user_id)):
-    pass
+    return await get_field_view(db=db, field_id=field_id, user_id=int(user_id))
+
+
+@router.post('/field/{field_id}', dependencies=[Depends(security.access_token_required)])
+async def update_field(db: SessionDep, field_id: int, data: AnyJsonResponse, user_id: str = Depends(get_current_user_id)):
+    return await update_field_view(db=db, field_id=field_id, data=data, user_id=int(user_id))
+
+
+@router.websocket("/ws/{room_id}")
+async def websocket_endpoint(
+        websocket: WebSocket,
+        room_id: str,
+        user_id: str = Depends(get_current_user_id)  # Получаем user_id из токена
+):
+    # Подключаем пользователя к комнате
+    connection_id = await manager.connect(websocket, room_id, user_id)
+
+    try:
+        while True:
+            # Ожидаем данные от клиента
+            data = await websocket.receive_json()
+
+            if data["type"] == "draw":
+                # Рассылаем обновление всем, кроме отправителя
+                await manager.broadcast(
+                    {
+                        "type": "canvas_update",
+                        "data": data["data"],
+                        "sender_id": user_id
+                    },
+                    room_id,
+                    exclude_user_id=user_id
+                )
+
+    except WebSocketDisconnect:
+        manager.disconnect(room_id, connection_id)
+    except Exception as e:
+        print(f"WebSocket error: {e}")
+        manager.disconnect(room_id, connection_id)
+    finally:
+        print(f"User {user_id} disconnected from room {room_id}")
 
 

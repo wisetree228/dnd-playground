@@ -6,6 +6,7 @@ import MyFieldsPage from './components/myfields';
 import RegisterPage from './components/register';
 import CreateFieldPage from './components/create_field';
 import ProfilePage from './components/profile';
+import CanvasPage from './components/field';
 
 
 const App = () => {
@@ -18,6 +19,7 @@ const App = () => {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/create_field" element={<CreateFieldPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/field/:id" element={<CanvasPage />} />
       </Routes>
     </Router>
   );

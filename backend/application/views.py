@@ -12,7 +12,7 @@ from sqlalchemy.orm import selectinload
 from backend.db.models import *
 from backend.db.utils import *
 from backend.application.utils import *
-from .schemas import LoginFormData, RegisterFormData, CreateFieldFormData, EditProfileFormData
+from .schemas import LoginFormData, RegisterFormData, CreateFieldFormData, EditProfileFormData, AnyJsonResponse
 from .config import config, security
 
 
@@ -116,3 +116,18 @@ async def change_avatar_view(uploaded_file: UploadFile, user_id: int, db: AsyncS
     user.avatar = file_bytes
     await db.commit()
     return {'status': 'ok'}
+
+
+async def get_field_view(db: AsyncSession, user_id: int, field_id: int):
+    field = await get_object_by_id(object_type=Field, id=field_id, db=db)
+    if field is None:
+        raise HTTPException(status_code=400, detail="Нет такого поля!")
+    return field.data
+
+
+async def update_field_view(db: AsyncSession, user_id: int, field_id: int, data: AnyJsonResponse):
+    field = await get_object_by_id(object_type=Field, id=field_id, db=db)
+    field.data = data.data
+    await db.commit()
+    await db.refresh(field)
+    return {'status':'ok'}
