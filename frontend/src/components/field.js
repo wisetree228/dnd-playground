@@ -1,8 +1,7 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { fabric } from 'fabric';
-import io from 'socket.io-client';
 import Footer from './footer';
 import './style/canvas.css';
 import { API_BASE_URL } from '../config';
@@ -12,95 +11,118 @@ const CanvasPage = () => {
     const navigate = useNavigate();
     const canvasRef = useRef(null);
     const fabricCanvas = useRef(null);
-    const socketRef = useRef(null);
     const [brushColor, setBrushColor] = useState('black');
     const [brushSize, setBrushSize] = useState(5);
     const [isDrawing, setIsDrawing] = useState(false);
     const [lastPointer, setLastPointer] = useState({ x: 0, y: 0 });
-    const [userId, setUserId] = useState(null);
 
-    // Получаем ID пользователя
+    // Инициализация canvas и загрузка данных
     useEffect(() => {
-        const fetchUserId = async () => {
-            try {
-                const response = await axios.get(`${API_BASE_URL}/my_id`, {
-                    withCredentials: true
-                });
-                setUserId(response.data.id);
-            } catch (error) {
-                navigate('/');
+        // Инициализация Fabric.js canvas
+        fabricCanvas.current = new fabric.Canvas(canvasRef.current, {
+        width: 800,
+        height: 600,
+        backgroundColor: 'lightgreen',
+        isDrawingMode: false,
+        selection: false, // Отключаем выделение объектов
+        defaultCursor: 'crosshair',
+        skipTargetFind: true // Устанавливаем курсор в виде крестика
+    });
+
+        
+
+        // Рисование сетки
+        drawGrid(fabricCanvas.current);
+
+        // Загрузка сохраненных данных
+        loadCanvasData(fabricCanvas.current);
+
+        // Настройка событий
+        const setupEventListeners = () => {
+            fabricCanvas.current.on('mouse:down', (options) => {
+                if (options.target) return;
+                setIsDrawing(true);
+                setLastPointer(options.absolutePointer);
+            });
+
+            fabricCanvas.current.on('mouse:move', (options) => {
+                if (!isDrawing || !currentLine) return;
+                const pointer = options.absolutePointer;
+                
+                const line = new fabric.Line(
+                    [lastPointer.x, lastPointer.y, pointer.x, pointer.y],
+                    {
+                        strokeWidth: brushSize,
+                        stroke: brushColor,
+                        selectable: false,
+                        evented: false
+                    }
+                );
+                fabricCanvas.current.add(line);
+                setLastPointer(pointer);
+            });
+
+            fabricCanvas.current.on('mouse:up', () => {
+                setIsDrawing(false);
+            });
+        };
+
+        setupEventListeners();
+
+        // Очистка при размонтировании
+        return () => {
+            if (fabricCanvas.current) {
+                fabricCanvas.current.off('mouse:down');
+                fabricCanvas.current.off('mouse:move');
+                fabricCanvas.current.off('mouse:up');
+                
+                // Более безопасный способ очистки
+                if (fabricCanvas.current.wrapperEl && fabricCanvas.current.wrapperEl.parentNode) {
+                    fabricCanvas.current.dispose();
+                }
+                fabricCanvas.current = null;
             }
         };
-        fetchUserId();
-    }, [navigate]);
+    }, [id]);
 
-    // Функция для отправки обновлений canvas
-    const sendCanvasUpdate = useCallback(() => {
-        if (socketRef.current?.connected && fabricCanvas.current) {
-            const jsonData = fabricCanvas.current.toJSON();
-            socketRef.current.emit('canvas_update', {
-                canvas: jsonData,
-                userId
-            });
-        }
-    }, [userId]);
-
-    // Инициализация canvas и WebSocket
+    // Обновление обработчиков событий при изменении параметров кисти
     useEffect(() => {
-        if (!userId) return;
+        if (!fabricCanvas.current) return;
 
-        // Инициализация canvas
-        const canvas = new fabric.Canvas(canvasRef.current, {
-            width: 800,
-            height: 600,
-            backgroundColor: 'lightgreen',
-            selection: false,
-            defaultCursor: 'crosshair'
-        });
-        fabricCanvas.current = canvas;
+        fabricCanvas.current.off('mouse:down');
+        fabricCanvas.current.off('mouse:move');
+        fabricCanvas.current.off('mouse:up');
 
-        // Подключение к WebSocket
-        const socket = io(API_BASE_URL, {
-            path: '/ws/socket.io',
-            transports: ['websocket'],
-            query: { room_id: id, user_id: userId }
-        });
-        socketRef.current = socket;
-
-        // Обработчик входящих обновлений
-        socket.on('canvas_update', (data) => {
-            if (data.userId === userId || !fabricCanvas.current) return;
-
-            fabricCanvas.current.loadFromJSON(data.canvas, () => {
-                fabricCanvas.current.renderAll();
-            });
+        fabricCanvas.current.on('mouse:down', (options) => {
+            setIsDrawing(true);
+            setLastPointer(options.absolutePointer);
         });
 
-        // Рисуем сетку
-        drawGrid(canvas);
-
-        // Загружаем сохраненные данные
-        loadCanvasData(canvas);
-
-        // Настройка обработчиков событий canvas
-        const events = ['object:modified', 'object:added', 'object:removed'];
-        events.forEach(event => {
-            canvas.on(event, sendCanvasUpdate);
+        fabricCanvas.current.on('mouse:move', (options) => {
+            if (!isDrawing) return;
+            const pointer = options.absolutePointer;
+            
+            const line = new fabric.Line(
+                [lastPointer.x, lastPointer.y, pointer.x, pointer.y],
+                {
+                    strokeWidth: brushSize,
+                    stroke: brushColor,
+                    selectable: false,
+                    evented: false
+                }
+            );
+            fabricCanvas.current.add(line);
+            setLastPointer(pointer);
         });
 
-        // Очистка
-        return () => {
-            events.forEach(event => {
-                canvas.off(event, sendCanvasUpdate);
-            });
-            canvas.dispose();
-            socket.disconnect();
-        };
-    }, [id, userId, sendCanvasUpdate]);
+        fabricCanvas.current.on('mouse:up', () => {
+            setIsDrawing(false);
+        });
+    }, [brushColor, brushSize, isDrawing, lastPointer]);
 
     const drawGrid = (canvas) => {
         if (!canvas) return;
-
+        
         canvas.clear();
         const background = new fabric.Rect({
             left: 0,
@@ -121,7 +143,7 @@ const CanvasPage = () => {
                 evented: false
             }));
         }
-
+        
         // Горизонтальные линии
         for (let j = 0; j < canvas.height; j += 20) {
             canvas.add(new fabric.Line([0, j, canvas.width, j], {
@@ -130,11 +152,15 @@ const CanvasPage = () => {
                 evented: false
             }));
         }
+
+
+
+
     };
 
     const loadCanvasData = async () => {
         if (!fabricCanvas.current) return;
-
+        
         try {
             const response = await axios.get(`${API_BASE_URL}/field/${id}`, { withCredentials: true });
             if (response.data === null) {
@@ -154,7 +180,7 @@ const CanvasPage = () => {
 
     const saveCanvasData = async () => {
         if (!fabricCanvas.current) return;
-
+        
         try {
             const jsonData = fabricCanvas.current.toJSON();
             await axios.post(`${API_BASE_URL}/field/${id}`, { data: jsonData }, { withCredentials: true });
@@ -167,7 +193,9 @@ const CanvasPage = () => {
 
     const handleBrushColor = (color) => {
         setBrushColor(color);
+
     };
+
 
     return (
         <div className="canvas-page">
@@ -183,21 +211,21 @@ const CanvasPage = () => {
                 </div>
                 <div>
                     <label>Размер кисти: </label>
-                    <input
-                        type="range"
-                        min="1"
-                        max="20"
-                        value={brushSize}
-                        onChange={(e) => setBrushSize(parseInt(e.target.value))}
+                    <input 
+                        type="range" 
+                        min="1" 
+                        max="20" 
+                        value={brushSize} 
+                        onChange={(e) => setBrushSize(parseInt(e.target.value))} 
                     />
                     {brushSize}
                 </div>
             </div>
-            <canvas
-                ref={canvasRef}
-                id="canvas"
-                width={800}
-                height={600}
+            <canvas 
+                ref={canvasRef} 
+                id="canvas" 
+                width={800} 
+                height={600} 
                 style={{ border: '1px solid #000', margin: '20px' }}
             />
             <Footer />
