@@ -15,7 +15,7 @@ import socketio
 
 router = APIRouter()
 SessionLocal = async_sessionmaker(engine, expire_on_commit=False)
-manager = ConnectionManager()
+manager = RoomManager()
 
 async def get_db() -> Generator[AsyncSession, None, None]:
     """
@@ -146,37 +146,22 @@ async def update_field(db: SessionDep, field_id: int, data: AnyJsonResponse, use
 
 
 @router.websocket("/ws/{room_id}")
-async def websocket_endpoint(
-        websocket: WebSocket,
-        room_id: str,
-        user_id: str = Depends(get_current_user_id)  # Получаем user_id из токена
-):
-    # Подключаем пользователя к комнате
-    connection_id = await manager.connect(websocket, room_id, user_id)
-
+async def websocket_endpoint(websocket: WebSocket, room_id: str):
+    await manager.connect(websocket, room_id)
     try:
         while True:
-            # Ожидаем данные от клиента
             data = await websocket.receive_json()
 
-            if data["type"] == "draw":
-                # Рассылаем обновление всем, кроме отправителя
-                await manager.broadcast(
-                    {
-                        "type": "canvas_update",
-                        "data": data["data"],
-                        "sender_id": user_id
-                    },
-                    room_id,
-                    exclude_user_id=user_id
-                )
+            if data["type"] == "canvas_update":
+                # Рассылаем обновление canvas
+                await manager.send_to_room({
+                    "type": "canvas_update",
+                    "canvas": data["canvas"],
+                    "userId": data.get("userId")
+                }, room_id, exclude=websocket)
 
     except WebSocketDisconnect:
-        manager.disconnect(room_id, connection_id)
+        manager.disconnect(websocket, room_id)
     except Exception as e:
-        print(f"WebSocket error: {e}")
-        manager.disconnect(room_id, connection_id)
-    finally:
-        print(f"User {user_id} disconnected from room {room_id}")
-
-
+        print(f"Error: {e}")
+        manager.disconnect(websocket, room_id)

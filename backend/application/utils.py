@@ -74,45 +74,28 @@ async def get_current_user_id(request: Request) -> str:
         )
 
 
-class ConnectionManager:
+class RoomManager:
     def __init__(self):
-        # Структура: {room_id: {connection_id: (user_id, websocket)}}
-        self.rooms: Dict[str, Dict[str, Tuple[str, WebSocket]]] = {}
+        # {room_id: List[WebSocket]}
+        self.rooms: Dict[str, List[WebSocket]] = {}
 
-    async def connect(self, websocket: WebSocket, room_id: str, user_id: str) -> str:
-        """Добавляет соединение в комнату и возвращает connection_id"""
+    async def connect(self, websocket: WebSocket, room_id: str):
         await websocket.accept()
-        connection_id = str(uuid.uuid4())
-
         if room_id not in self.rooms:
-            self.rooms[room_id] = {}
+            self.rooms[room_id] = []
+        self.rooms[room_id].append(websocket)
 
-        self.rooms[room_id][connection_id] = (user_id, websocket)
-        return connection_id
-
-    def disconnect(self, room_id: str, connection_id: str):
-        """Удаляет соединение из комнаты"""
-        if room_id in self.rooms and connection_id in self.rooms[room_id]:
-            del self.rooms[room_id][connection_id]
-
-            # Если комната пустая - удаляем ее
+    def disconnect(self, websocket: WebSocket, room_id: str):
+        if room_id in self.rooms:
+            self.rooms[room_id].remove(websocket)
             if not self.rooms[room_id]:
                 del self.rooms[room_id]
 
-    async def broadcast(self, message: dict, room_id: str, exclude_user_id: str = None):
-        """Отправляет сообщение всем в комнате, кроме указанного пользователя"""
-        if room_id not in self.rooms:
-            return
-
-        for connection_id, (user_id, websocket) in self.rooms[room_id].items():
-            if user_id != exclude_user_id:
-                try:
-                    await websocket.send_json(message)
-                except:
-                    self.disconnect(room_id, connection_id)
-
-    def get_users_in_room(self, room_id: str) -> List[str]:
-        """Возвращает список user_id в указанной комнате"""
-        if room_id not in self.rooms:
-            return []
-        return [user_id for user_id, _ in self.rooms[room_id].values()]
+    async def send_to_room(self, message: dict, room_id: str, exclude: WebSocket = None):
+        if room_id in self.rooms:
+            for connection in self.rooms[room_id]:
+                if connection != exclude:
+                    try:
+                        await connection.send_json(message)
+                    except:
+                        self.disconnect(connection, room_id)
