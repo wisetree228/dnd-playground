@@ -152,11 +152,18 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
         while True:
             data = await websocket.receive_json()
 
-            if data["type"] == "canvas_update":
-                # Рассылаем обновление canvas
+            if data["type"] == "canvas_object":
+                # Рассылаем только новый объект
                 await manager.send_to_room({
-                    "type": "canvas_update",
-                    "canvas": data["canvas"],
+                    "type": "canvas_object",
+                    "object": data["object"],
+                    "userId": data.get("userId")
+                }, room_id, exclude=websocket)
+
+            elif data["type"] == "canvas_clear":
+                # Рассылаем команду очистки
+                await manager.send_to_room({
+                    "type": "canvas_clear",
                     "userId": data.get("userId")
                 }, room_id, exclude=websocket)
 
