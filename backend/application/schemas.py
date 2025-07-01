@@ -36,4 +36,14 @@ class CreateFieldFormData(BaseModel):
 
 
 class AnyJsonResponse(BaseModel):
+    """
+    схема обновления канваса
+    """
     data: Dict[str, Any]
+
+
+class AccessData(BaseModel):
+    """
+    схема валидации при создании доступа
+    """
+    username: str = Field(min_length=3, max_length=50)

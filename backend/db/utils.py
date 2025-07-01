@@ -56,3 +56,39 @@ async def get_object_by_id(
     result = await db.execute(select(object_type).filter(object_type.id==id))
     return result.scalars().first()
 
+
+async def delete_object(
+    object: Base,
+    db: AsyncSession
+) -> None:
+    """
+    Удаляет обьект из бд
+
+    Args:
+        object (Base): обьект
+        db (AsyncSession): Сессия базы данных.
+    Returns:
+        None
+    """
+    await db.delete(object)
+    await db.commit()
+
+
+async def get_access_with_username(username: str, field_id: int, db: AsyncSession):
+    user = await get_user_by_username(username=username, db=db)
+    if user is None:
+        return None
+    res = await db.execute(select(Access).where(and_(
+        Access.user_id==user.id,
+        Access.field_id==field_id
+    )))
+    return res.scalars().first()
+
+
+async def get_access_with_id(user_id: int, field_id: int, db: AsyncSession):
+    res = await db.execute(select(Access).where(and_(
+        Access.user_id==user_id,
+        Access.field_id==field_id
+    )))
+    return res.scalars().first()
+

@@ -4,14 +4,11 @@
 from typing import Generator, Annotated
 from fastapi import Response, APIRouter, Depends, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
-from starlette.websockets import WebSocketDisconnect
-
 from backend.db.models import engine
 from .utils import *
 from .config import security, config
 from .views import *
 from .schemas import *
-import socketio
 
 router = APIRouter()
 SessionLocal = async_sessionmaker(engine, expire_on_commit=False)
@@ -147,28 +144,20 @@ async def update_field(db: SessionDep, field_id: int, data: AnyJsonResponse, use
 
 @router.websocket("/ws/{room_id}")
 async def websocket_endpoint(websocket: WebSocket, room_id: str):
-    await manager.connect(websocket, room_id)
-    try:
-        while True:
-            data = await websocket.receive_json()
+    await handle_websocket(websocket=websocket, room_id=room_id, manager=manager)
 
-            if data["type"] == "canvas_object":
-                # Рассылаем только новый объект
-                await manager.send_to_room({
-                    "type": "canvas_object",
-                    "object": data["object"],
-                    "userId": data.get("userId")
-                }, room_id, exclude=websocket)
 
-            elif data["type"] == "canvas_clear":
-                # Рассылаем команду очистки
-                await manager.send_to_room({
-                    "type": "canvas_clear",
-                    "userId": data.get("userId")
-                }, room_id, exclude=websocket)
+@router.post('/access/{field_id}', dependencies=[Depends(security.access_token_required)])
+async def create_access(data: AccessData, db: SessionDep, field_id: int, user_id: str = Depends(get_current_user_id)):
+    return await create_access_view(data=data, db=db, user_id=int(user_id), field_id=field_id)
 
-    except WebSocketDisconnect:
-        manager.disconnect(websocket, room_id)
-    except Exception as e:
-        print(f"Error: {e}")
-        manager.disconnect(websocket, room_id)
+
+@router.get('/access/{field_id}', dependencies=[Depends(security.access_token_required)])
+async def get_access(db: SessionDep, field_id: int, user_id: str = Depends(get_current_user_id)):
+    return await get_access_view(db=db, user_id=int(user_id), field_id=field_id)
+
+
+@router.delete('/access/{other_user_id}/{field_id}', dependencies=[Depends(security.access_token_required)])
+async def delete_access(db: SessionDep, field_id: int, other_user_id: int, user_id: str = Depends(get_current_user_id)):
+    return await delete_access_view(db=db, field_id=field_id, other_user_id=other_user_id, user_id=int(user_id))
+

@@ -27,8 +27,15 @@ const LoginPage = () => {
       navigate('/home');
 
     } catch (error) {
-      // Обработка ошибок
-      console.error('Ошибка входа:', error);
+
+      try{
+          const response = await axios.get(`${API_BASE_URL}/my_id`, {withCredentials: true})
+          if (response.data.id){
+            navigate('/home')
+          }
+          
+      } catch {
+        console.error('Ошибка входа:', error);
 
       let errorMessage = 'Произошла ошибка при входе. Пожалуйста, попробуйте еще раз.';
       if (error.response) {
@@ -41,8 +48,13 @@ const LoginPage = () => {
         // Что-то пошло не так при настройке запроса
         errorMessage = 'Ошибка запроса: ' + error.message;
       }
+      alert(errorMessage); 
+      }
 
-      alert(errorMessage); // Выводим сообщение об ошибке
+      // Обработка ошибок
+      
+
+      // Выводим сообщение об ошибке
     }
   };
 

@@ -9,10 +9,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
+from starlette.websockets import WebSocketDisconnect
+
 from backend.db.models import *
 from backend.db.utils import *
 from backend.application.utils import *
-from .schemas import LoginFormData, RegisterFormData, CreateFieldFormData, EditProfileFormData, AnyJsonResponse
+from .schemas import LoginFormData, RegisterFormData, CreateFieldFormData, EditProfileFormData, AnyJsonResponse, AccessData
 from .config import config, security
 
 
@@ -131,3 +133,70 @@ async def update_field_view(db: AsyncSession, user_id: int, field_id: int, data:
     await db.commit()
     await db.refresh(field)
     return {'status':'ok'}
+
+
+async def handle_websocket(websocket: WebSocket, room_id: str, manager: RoomManager):
+    await manager.connect(websocket, room_id)
+    try:
+        while True:
+            data = await websocket.receive_json()
+
+            if data["type"] == "canvas_object":
+                # Рассылаем только новый объект
+                await manager.send_to_room({
+                    "type": "canvas_object",
+                    "object": data["object"],
+                    "userId": data.get("userId")
+                }, room_id, exclude=websocket)
+
+            elif data["type"] == "canvas_clear":
+                # Рассылаем команду очистки
+                await manager.send_to_room({
+                    "type": "canvas_clear",
+                    "userId": data.get("userId")
+                }, room_id, exclude=websocket)
+
+    except WebSocketDisconnect:
+        manager.disconnect(websocket, room_id)
+    except Exception as e:
+        print(f"Error: {e}")
+        manager.disconnect(websocket, room_id)
+
+
+async def create_access_view(data: AccessData, db: AsyncSession, user_id: int, field_id: int):
+    access = await get_access_with_username(username=data.username, field_id=field_id, db=db)
+    if access:
+        return {'status':'ok'}
+    field = await get_object_by_id(object_type=Field, db=db, id=field_id)
+    if field is None:
+        raise HTTPException(status_code=400, detail='Такого поля не существует!')
+    if field.author_id!=user_id:
+        raise HTTPException(status_code=400, detail='Вы не владелец поля!')
+
+    user = await get_user_by_username(username=data.username, db=db)
+    if user is None:
+        raise HTTPException(status_code=400, detail='Такого юзера не существует!')
+    new_access = Access(
+        user_id=user.id,
+        field_id=field_id
+    )
+    await add_and_refresh_object(object=new_access, db=db)
+    return {'status':'ok'}
+
+
+async def get_access_view(user_id: int, db: AsyncSession, field_id: int):
+    access = await get_access_with_id(user_id=user_id, field_id=field_id, db=db)
+    if access is not None:
+        return {'status':'ok'}
+    raise HTTPException(status_code=400, detail='Отказано в доступе!')
+
+
+async def delete_access_view(db: AsyncSession, user_id: int, field_id: int, other_user_id: int):
+    field = await get_object_by_id(object_type=Field, id=field_id, db=db)
+    if field.author_id != user_id:
+        raise HTTPException(status_code=400, detail='Вы не владелец поля!')
+    access = await get_access_with_id(user_id=other_user_id, field_id=field_id, db=db)
+    if access:
+        await delete_object(object=access, db=db)
+    return {'status':'ok'}
+

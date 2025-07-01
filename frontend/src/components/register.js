@@ -43,7 +43,15 @@ const RegisterPage = () => {
       navigate('/home'); // Перенаправляем на страницу /home
 
     } catch (err) {
-      console.error('Ошибка при регистрации:', err);
+
+      try{
+          const response = await axios.get(`${API_BASE_URL}/my_id`, {withCredentials: true})
+          if (response.data.id){
+            navigate('/home')
+          }
+          
+      } catch {
+        console.error('Ошибка при регистрации:', err);
       if (err.response.data.detail) {
         // Если сервер вернул конкретное сообщение об ошибке
         alert(`Ошибка регистрации: ${err.response.data.detail}`);
@@ -51,6 +59,9 @@ const RegisterPage = () => {
         // Общее сообщение об ошибке, если ответ сервера неожиданный
         alert('Ошибка регистрации. Пожалуйста, попробуйте еще раз.');
       }
+      }
+
+      
     }
   };
 
