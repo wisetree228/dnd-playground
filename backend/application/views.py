@@ -121,9 +121,13 @@ async def change_avatar_view(uploaded_file: UploadFile, user_id: int, db: AsyncS
 
 
 async def get_field_view(db: AsyncSession, user_id: int, field_id: int):
+    access = await get_access_with_id(user_id=user_id, field_id=field_id, db=db)
     field = await get_object_by_id(object_type=Field, id=field_id, db=db)
     if field is None:
         raise HTTPException(status_code=400, detail="Нет такого поля!")
+    if access is None and field.author_id!=user_id:
+        raise HTTPException(status_code=400, detail='Отказано в доступе!')
+
     return field.data
 
 
@@ -199,4 +203,16 @@ async def delete_access_view(db: AsyncSession, user_id: int, field_id: int, othe
     if access:
         await delete_object(object=access, db=db)
     return {'status':'ok'}
+
+
+async def get_accesses_for_field_view(db: AsyncSession, user_id: int, field_id: int):
+    field = await get_object_by_id(object_type=Field, id=field_id, db=db)
+    if field.author_id != user_id:
+        raise HTTPException(status_code=400, detail='Отказано в доступе!')
+    accesses = await get_all_accesses_to_field(field_id=field_id, db=db)
+    response = {
+        'accessed_users':[{'user_id':ac.user_id, 'username':ac.user.username} for ac in accesses]
+    }
+    return response
+
 

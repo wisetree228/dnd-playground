@@ -122,6 +122,11 @@ async def get_avatar(db: SessionDep, user_id: str = Depends(get_current_user_id)
     return await get_avatar_view(db=db, user_id=int(user_id))
 
 
+@router.get('/avatar/{other_user_id}', dependencies=[Depends(security.access_token_required)])
+async def get_avatar(db: SessionDep, other_user_id: int, user_id: str = Depends(get_current_user_id)):
+    return await get_avatar_view(db=db, user_id=other_user_id)
+
+
 @router.get('/profile', dependencies=[Depends(security.access_token_required)])
 async def get_profile(db: SessionDep, user_id: str = Depends(get_current_user_id)):
     return await get_profile_view(db=db, user_id=int(user_id))
@@ -160,4 +165,9 @@ async def get_access(db: SessionDep, field_id: int, user_id: str = Depends(get_c
 @router.delete('/access/{other_user_id}/{field_id}', dependencies=[Depends(security.access_token_required)])
 async def delete_access(db: SessionDep, field_id: int, other_user_id: int, user_id: str = Depends(get_current_user_id)):
     return await delete_access_view(db=db, field_id=field_id, other_user_id=other_user_id, user_id=int(user_id))
+
+
+@router.get('/accesses/{field_id}', dependencies=[Depends(security.access_token_required)])
+async def get_accesses_for_field(field_id: int, db: SessionDep, user_id: str = Depends(get_current_user_id)):
+    return await get_accesses_for_field_view(field_id=field_id, db=db, user_id=int(user_id))
 

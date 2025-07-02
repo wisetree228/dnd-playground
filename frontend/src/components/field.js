@@ -17,26 +17,74 @@ const CanvasPage = () => {
     const [lastPointer, setLastPointer] = useState({ x: 0, y: 0 });
     const [userId, setUserId] = useState(null);
     const websocketRef = useRef(null);
+    const [accessedUsers, setAccessedUsers] = useState([]);
+    const [newUsername, setNewUsername] = useState('');
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         const fetchId = async () => {
             try {
-                const response = await axios.get(`${API_BASE_URL}/my_id`, { withCredentials: true })
-                setUserId(response.data.id)
+                const response = await axios.get(`${API_BASE_URL}/my_id`, { withCredentials: true });
+                setUserId(response.data.id);
+                // После получения ID загружаем список пользователей
+                fetchAccessedUsers(response.data.id);
             } catch {
-                navigate('/')
+                navigate('/');
             }
-        }
+        };
 
         fetchId();
     }, []);
+
+    const fetchAccessedUsers = async (currentUserId) => {
+        try {
+            const response = await axios.get(`${API_BASE_URL}/accesses/${id}`, {
+                withCredentials: true
+            });
+            setAccessedUsers(response.data.accessed_users);
+            setError(null);
+        } catch (err) {
+            setError('Не удалось загрузить список пользователей. Возможно, у вас нет прав.');
+            console.error("Ошибка загрузки списка пользователей:", err);
+        }
+    };
+
+    const handleAddAccess = async () => {
+        if (!newUsername.trim()) return;
+
+        try {
+            await axios.post(
+                `${API_BASE_URL}/access/${id}`,
+                { username: newUsername },
+                { withCredentials: true }
+            );
+            setNewUsername('');
+            fetchAccessedUsers(userId);
+        } catch (err) {
+            console.error("Ошибка добавления пользователя:", err);
+            alert('Вы не имеете права для администрирования поля либо на стороне сервера произошла ошибка');
+        }
+    };
+
+    const handleRemoveAccess = async (userToRemoveId) => {
+        try {
+            await axios.delete(
+                `${API_BASE_URL}/access/${userToRemoveId}/${id}`,
+                { withCredentials: true }
+            );
+            fetchAccessedUsers(userId);
+        } catch (err) {
+            console.error("Ошибка удаления пользователя:", err);
+            alert('Не удалось удалить пользователя.');
+        }
+    };
 
     // Инициализация WebSocket соединения
     useEffect(() => {
         const protocol = 'ws:';
         const host = API_BASE_URL.replace('http://', '');
         const wsUrl = `${protocol}//${host}/ws/${id}`;
-        
+
         websocketRef.current = new WebSocket(wsUrl);
 
         websocketRef.current.onopen = () => {
@@ -70,7 +118,7 @@ const CanvasPage = () => {
             case 'canvas_object':
                 // Игнорируем свои же сообщения (они уже отрисованы)
                 if (message.userId === userId) return;
-                
+
                 fabric.util.enlivenObjects([message.object], (objects) => {
                     objects.forEach(obj => {
                         fabricCanvas.current.add(obj);
@@ -78,14 +126,14 @@ const CanvasPage = () => {
                     fabricCanvas.current.renderAll();
                 });
                 break;
-                
+
             case 'canvas_clear':
                 // Игнорируем свои же сообщения
                 if (message.userId === userId) return;
-                
+
                 drawGrid(fabricCanvas.current);
                 break;
-                
+
             default:
                 console.warn('Unknown message type:', message.type);
         }
@@ -136,13 +184,13 @@ const CanvasPage = () => {
                     }
                 );
                 fabricCanvas.current.add(line);
-                
+
                 // Отправляем новый объект через WebSocket
                 sendWebSocketMessage({
                     type: 'canvas_object',
                     object: line.toObject()
                 });
-                
+
                 setLastPointer(pointer);
             });
 
@@ -195,13 +243,13 @@ const CanvasPage = () => {
                 }
             );
             fabricCanvas.current.add(line);
-            
+
             // Отправляем новый объект через WebSocket
             sendWebSocketMessage({
                 type: 'canvas_object',
                 object: line.toObject()
             });
-            
+
             setLastPointer(pointer);
         });
 
@@ -259,8 +307,8 @@ const CanvasPage = () => {
                 });
             }
         } catch (error) {
-            console.error("Ошибка загрузки данных:", error);
-            drawGrid(fabricCanvas.current);
+            alert('вы не имеете доступа к этому полю либо на стороне сервера произошла ошибка!')
+            navigate('/home')
         }
     };
 
@@ -305,13 +353,54 @@ const CanvasPage = () => {
                     {brushSize}
                 </div>
             </div>
-            <canvas
-                ref={canvasRef}
-                id="canvas"
-                width={800}
-                height={600}
-                style={{ border: '1px solid #000', margin: '20px' }}
-            />
+
+            <div className="canvas-container">
+                <canvas
+                    ref={canvasRef}
+                    id="canvas"
+                    width={800}
+                    height={600}
+                    style={{ border: '1px solid #000', margin: '20px' }}
+                />
+
+                {!error && (
+                    <div className="access-panel">
+                        <h3>Доступ к полю</h3>
+                        
+                        <div className="add-user-form">
+                            <input
+                                type="text"
+                                value={newUsername}
+                                onChange={(e) => setNewUsername(e.target.value)}
+                                placeholder="Введите username"
+                            />
+                            <button onClick={handleAddAccess}>Добавить</button>
+                        </div>
+                        
+                        <div className="users-list">
+                            {accessedUsers.map(user => (
+                                <div key={user.user_id} className="user-item">
+                                    <img 
+                                        src={`${API_BASE_URL}/avatar/${user.user_id}`} 
+                                        alt={user.username} 
+                                        className="user-avatar"
+                                    />
+                                    <span className="username">{user.username}</span>
+                                    <button 
+                                        onClick={() => handleRemoveAccess(user.user_id)}
+                                        className="remove-btn"
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* {error && <div className="access-error">{error}</div>} */}
+            </div>
+
             <Footer />
         </div>
     );

@@ -92,3 +92,10 @@ async def get_access_with_id(user_id: int, field_id: int, db: AsyncSession):
     )))
     return res.scalars().first()
 
+
+async def get_all_accesses_to_field(field_id: int, db: AsyncSession):
+    res = await db.execute(select(Access).where(Access.field_id==field_id).options(
+        joinedload(Access.user)
+    ))
+    return res.scalars().all()
+
