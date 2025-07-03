@@ -8,7 +8,7 @@
 Создать платформу с вирутальными игровыми полями для dungeon & dragons, на которых можно рисовать в реальном времени и давать или отнимать к свои полям доступ другим игрокам, сохранять поля в базу данных
 
 
-### Сам проект на сервере - 
+### Сам проект на сервере - http://5.35.126.208:3000
 
 ### Технологический стэк:
 #### Backend:
@@ -96,7 +96,7 @@ DISABLE_ESLINT_PLUGIN=true
 ### Project Idea:
 Create a platform with virtual playing fields for dungeons & dragons, where you can draw in real time and give or take away access to your fields to other players, save fields to a database
 
-### The project is hosted at - 
+### The project is hosted at - http://5.35.126.208:3000
 
 ### Technology Stack:
 #### Backend:
