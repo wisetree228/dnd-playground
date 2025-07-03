@@ -14,56 +14,63 @@ const RegisterPage = () => {
   const navigate = useNavigate();
 
   const handleRegister = async (e) => {
-    e.preventDefault(); // Предотвращаем стандартное поведение формы
+  e.preventDefault();
+  setError('');
 
-    setError(''); // Сбрасываем предыдущие ошибки
+  // 1. Проверка полей
+  if (!username || !password || !confirmPassword) {
+    setError('Пожалуйста, заполните все поля.');
+    return;
+  }
 
-    // 1. Проверка на заполненность полей
-    if (!username || !password || !confirmPassword) {
-      setError('Пожалуйста, заполните все поля.');
-      return;
-    }
+  if (password !== confirmPassword) {
+    setError('Пароли не совпадают. Пожалуйста, проверьте.');
+    return;
+  }
 
-    // 2. Проверка совпадения паролей
-    if (password !== confirmPassword) {
-      setError('Пароли не совпадают. Пожалуйста, проверьте.');
-      return;
-    }
+  try {
+    // 1. Пробуем зарегистрироваться
+    const response = await axios.post(
+      `${API_BASE_URL}/register`,
+      { username, password },
+      { withCredentials: true }
+    );
 
-    // 3. Отправка данных на сервер
-    try {
-      const response = await axios.post(
-        `${API_BASE_URL}/register`,
-        { username, password },
-        { withCredentials: true } // Важно для передачи куки/сессий, если ваш бэкенд их использует
-      );
-
-      // Если регистрация успешна
-      console.log('Регистрация успешна:', response.data);
-      navigate('/home'); // Перенаправляем на страницу /home
-
+    console.log('Регистрация успешна:', response.data);
+    navigate('/home');
     } catch (err) {
+    console.error('Ошибка регистрации:', err);
 
-      try{
-          const response = await axios.get(`${API_BASE_URL}/my_id`, {withCredentials: true})
-          if (response.data.id){
-            navigate('/home')
-          }
-          
-      } catch {
-        console.error('Ошибка при регистрации:', err);
-      if (err.response.data.detail) {
-        // Если сервер вернул конкретное сообщение об ошибке
-        alert(`Ошибка регистрации: ${err.response.data.detail}`);
-      } else {
-        // Общее сообщение об ошибке, если ответ сервера неожиданный
-        alert('Ошибка регистрации. Пожалуйста, попробуйте еще раз.');
-      }
-      }
+    // Сначала проверяем, авторизован ли пользователь
+    try {
+      const checkResponse = await axios.get(`${API_BASE_URL}/my_id`, {
+        withCredentials: true
+      });
 
-      
+      if (checkResponse.data?.id) {
+        navigate('/home');
+        return;
+      }
+    } catch (checkErr) {
+      console.log('Пользователь не авторизован');
     }
-  };
+
+    // Обрабатываем ошибку регистрации
+    let errorMessage = 'Ошибка регистрации! Возможно, пользователь с таким именем уже существует';
+
+    if (err.response) {
+      // Сервер ответил с ошибкой (4xx, 5xx)
+      errorMessage = err.response.data?.detail ||
+                   err.response.data?.message ||
+                   errorMessage;
+    } else if (err.request) {
+      // Запрос был сделан, но ответ не получен
+      errorMessage = 'Не удалось подключиться к серверу';
+    }
+
+    setError(errorMessage);
+  }
+};
 
   return (
     <div className="register-page">

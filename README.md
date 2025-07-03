@@ -1,4 +1,4 @@
-# Проект  | Project 
+# Проект "Dnd Playground" | Project "Dnd Playground"
 [Русская версия](#russian-version) | [English Version](#english-version)
 
 <a id="russian-version"></a>

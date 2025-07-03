@@ -19,20 +19,20 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD} 
       DB_NAME: ${POSTGRES_DB}
        - WEBSOCKET_CORS_ORIGIN=*
-#  alembic:
-#    build:
-#      context: .
-#      dockerfile: backend/Dockerfile
-#    container_name: alembic_dnd
-#    env_file:
-#      - .env
-#    volumes:
-#      - .:/backend
-#    working_dir: /backend
-#    entrypoint: [ "python", "-m", "alembic" ]
-#    command: [ "-c", "alembic.ini", "upgrade", "head" ]
-#    depends_on:
-#      - db
+  alembic:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: alembic_dnd
+    env_file:
+      - .env
+    volumes:
+      - .:/backend
+    working_dir: /backend
+    entrypoint: [ "python", "-m", "alembic" ]
+    command: [ "-c", "alembic.ini", "upgrade", "head" ]
+    depends_on:
+      - db
   
   frontend:
    build: ./frontend
