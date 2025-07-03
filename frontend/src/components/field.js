@@ -381,7 +381,7 @@ const CanvasPage = () => {
                             {accessedUsers.map(user => (
                                 <div key={user.user_id} className="user-item">
                                     <img 
-                                        src={`${API_BASE_URL}/avatar/${user.user_id}`} 
+                                        src={`${API_BASE_URL}/avatar/${user.user_id}?t=${Date.now()}`} 
                                         alt={user.username} 
                                         className="user-avatar"
                                     />

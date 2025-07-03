@@ -28,30 +28,33 @@ function ProfilePage() {
   // --- Загрузка данных профиля и аватарки при монтировании ---
   useEffect(() => {
     const fetchProfileData = async () => {
-      try {
+    try {
+      if (isMounted) {
         setLoading(true);
         setError(null);
-
-        const [profileRes, avatarRes] = await Promise.all([
-          axios.get(`${API_BASE_URL}/profile`, {withCredentials: true}),
-          axios.get(`${API_BASE_URL}/my_avatar`, { responseType: 'blob', withCredentials: true }) // Получаем аватар как Blob
-        ]);
-
-        setUsername(profileRes.data.username);
-        setNewUsername(profileRes.data.username); // Инициализируем поле редактирования текущим именем
-
-        // Создаем URL для Blob-объекта
-        const avatarBlobUrl = URL.createObjectURL(avatarRes.data);
-        setAvatarUrl(avatarBlobUrl);
-
-      } catch (err) {
-        console.error("Ошибка при загрузке профиля:", err);
-        setError("Не удалось загрузить данные профиля.");
-      } finally {
-        setLoading(false);
       }
-    };
 
+      const profileRes = await axios.get(`${API_BASE_URL}/profile`, {
+        withCredentials: true,
+        signal: controller.signal
+      });
+
+      if (isMounted) {
+        setUsername(profileRes.data.username);
+        setNewUsername(profileRes.data.username);
+      }
+
+      // ... аналогично для аватарки ...
+
+    } catch (err) {
+      if (isMounted && !axios.isCancel(err)) {
+        console.error("Ошибка:", err);
+        setError("Не удалось загрузить данные");
+      }
+    } finally {
+      if (isMounted) setLoading(false);
+    }
+  };
     fetchProfileData();
 
     // Очистка URL Blob при размонтировании компонента
@@ -99,7 +102,7 @@ function ProfilePage() {
     formData.append('uploaded_file', selectedAvatarFile);
 
     try {
-      await axios.post(`${API_BASE_URL}/avatar`, formData, { withCredentials: true,
+      await axios.post(`${API_BASE_URL}/avatar?t=${Date.now()}`, formData, { withCredentials: true,
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -203,7 +206,7 @@ function ProfilePage() {
         {/* Секция Аватарки */}
         <div className={styles.avatarSection}>
           <img
-            src={`${API_BASE_URL}/my_avatar`} 
+            src={`${API_BASE_URL}/my_avatar?t=${Date.now()}`} 
             alt="Аватар пользователя"
             style={{ width: '150px', height: '150px', objectFit: 'cover', borderRadius: '50%' }}
           />
