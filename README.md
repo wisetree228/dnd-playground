@@ -5,6 +5,7 @@
 ##  Русская версия
 
 ### Идея проекта:
+Создать платформу с вирутальными игровыми полями для dungeon & dragons, на которых можно рисовать в реальном времени и давать или отнимать к свои полям доступ другим игрокам, сохранять поля в базу данных
 
 
 ### Сам проект на сервере - 
@@ -18,13 +19,17 @@
 #### Frontend:
 - ReactJS
 - FabricJS
-- SocketIO
 #### Паттерн проектирования на бэкенде - MVC
 
 #### Для поднятия всего проекта используется docker compose
 
 ### Реализованный функционал:
-
+- Создание полей
+- Рисование на полях, в реальном времени для нескольких игроков
+- Система регистрации и авторизации
+- Редактирование профиля
+- Система доступа к полям
+- Сохранение рисунков в базу данных
 
 
 # Инструкция по локальному запуску 
@@ -75,7 +80,7 @@ DISABLE_ESLINT_PLUGIN=true
 
 7) Когда докер поднимется, откройте второй терминал и выполните ```sudo docker compose run --rm app alembic revision --autogenerate -m "New migration"``` а потом ```sudo docker compose run --rm app alembic upgrade head``` (создание таблиц в бд)
 
-8) Готово! Проект доступен на локальном сервере по адресу http://localhost (пользовательский фронтенд), к API бэкенда обращаться по http://localhost:8000
+8) Готово! Проект доступен на локальном сервере по адресу http://localhost:3000 (пользовательский фронтенд), к API бэкенда обращаться по http://localhost:8000
 
 
 
@@ -89,7 +94,7 @@ DISABLE_ESLINT_PLUGIN=true
 ## English version
 
 ### Project Idea:
-
+Create a platform with virtual playing fields for dungeons & dragons, where you can draw in real time and give or take away access to your fields to other players, save fields to a database
 
 ### The project is hosted at - 
 
@@ -101,14 +106,19 @@ DISABLE_ESLINT_PLUGIN=true
 - Alembic 1.13.2
 #### Frontend:
 - ReactJS
-- SocketIO
+- FabricJS
 
 #### Design Pattern on the Backend - MVC
 
 #### The entire project is launched using Docker Compose.
 
 ### Implemented Functionality:
-
+- Creating fields
+- Drawing on fields, in real time for multiple players
+- Registration and authorization system
+- Profile editing
+- Field access system
+- Saving drawings to the database
 
 ## Local Launch Instructions
 
@@ -151,7 +161,7 @@ DISABLE_ESLINT_PLUGIN=true
 
 7) Once Docker is up, open a second terminal and run ```sudo docker compose run --rm app alembic revision --autogenerate -m "New migration"``` and then ```sudo docker compose run --rm app alembic upgrade head``` (this creates tables in the database).
 
-8) Done! The project is available on the local server at http://localhost (user frontend), API backend can be accessed at http://localhost:8000.
+8) Done! The project is available on the local server at http://localhost:3000 (user frontend), API backend can be accessed at http://localhost:8000.
 
 
 

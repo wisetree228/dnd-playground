@@ -1,15 +1,12 @@
 """
 Вспомогательные функции, которые используются во view функциях
 """
-from typing import Dict, List, Tuple
-from datetime import datetime
-import json
+from typing import Dict, List
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 import bcrypt
 from fastapi import Request, HTTPException, status, WebSocket
 from .config import config
-import uuid
 
 
 # Настройка контекста для хэширования
@@ -75,23 +72,35 @@ async def get_current_user_id(request: Request) -> str:
 
 
 class RoomManager:
+    """
+    Вспомогательный класс для обработки вебсокет-соединений
+    """
     def __init__(self):
         # {room_id: List[WebSocket]}
         self.rooms: Dict[str, List[WebSocket]] = {}
 
     async def connect(self, websocket: WebSocket, room_id: str):
+        """
+        Подключает пользователя (добавляет его соединение в список соединений для конкретной команты)
+        """
         await websocket.accept()
         if room_id not in self.rooms:
             self.rooms[room_id] = []
         self.rooms[room_id].append(websocket)
 
     def disconnect(self, websocket: WebSocket, room_id: str):
+        """
+        Отключает пользователя
+        """
         if room_id in self.rooms:
             self.rooms[room_id].remove(websocket)
             if not self.rooms[room_id]:
                 del self.rooms[room_id]
 
     async def send_to_room(self, message: dict, room_id: str, exclude: WebSocket = None):
+        """
+        Отправляет всем в комнате какое-то сообщение
+        """
         if room_id in self.rooms:
             for connection in self.rooms[room_id]:
                 if connection != exclude:

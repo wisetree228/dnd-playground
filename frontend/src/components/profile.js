@@ -62,6 +62,16 @@ function ProfilePage() {
     };
   }, []);
 
+  const handleLogout = async () => {
+  try {
+    await axios.post(`${API_BASE_URL}/logout`, {}, { withCredentials: true });
+    navigate('/'); // Перенаправляем на главную после выхода
+  } catch (err) {
+    console.error("Ошибка при выходе:", err);
+    alert('Не удалось выйти из аккаунта. Попробуйте еще раз.');
+  }
+};
+
   // --- Обработчики изменения аватара ---
   const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -182,6 +192,9 @@ function ProfilePage() {
         <button onClick={() => navigate('/home')} className={styles.goHomeButton}>
           ← Вернуться на главную
         </button>
+        <button onClick={handleLogout} className={styles.logoutButton}>
+    Выйти из аккаунта
+  </button>
       </header>
 
       <div className={styles.profileContainer}>
@@ -192,11 +205,11 @@ function ProfilePage() {
           <img
             src={`${API_BASE_URL}/my_avatar`} 
             alt="Аватар пользователя"
-            style={{ width: '150px', height: '150px', objectFit: 'cover' }}
+            style={{ width: '150px', height: '150px', objectFit: 'cover', borderRadius: '50%' }}
           />
           <div className={styles.avatarUpload}>
             <label htmlFor="avatar-upload" className={styles.fileInputLabel}>
-              {selectedAvatarFile ? selectedAvatarFile.name : 'Выбрать файл'}
+              {selectedAvatarFile ? selectedAvatarFile.name : 'Сменить аватар'}
             </label>
             <input
               id="avatar-upload"

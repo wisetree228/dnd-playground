@@ -1,11 +1,11 @@
 """
 Вспомогательные функции для обращения к бд
 """
-from typing import Type, List
+from typing import Type
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
-from sqlalchemy import or_, and_, func
+from sqlalchemy import and_
 from .models import *
 
 
@@ -29,12 +29,18 @@ async def add_and_refresh_object(
 
 
 async def get_user_by_username(username: str, db: AsyncSession):
+    """
+    Возвращает обьект юзера который имеет указанный юзернейм
+    """
     res = await db.execute(select(User).where(User.username == username))
     user = res.scalars().first()
     return user
 
 
 async def get_user_fields(user_id: int, db: AsyncSession):
+    """
+    Возвращает поля пользователя
+    """
     res = await db.execute(select(Field).where(Field.author_id == user_id))
     return res.scalars().all()
 
@@ -75,6 +81,9 @@ async def delete_object(
 
 
 async def get_access_with_username(username: str, field_id: int, db: AsyncSession):
+    """
+    Возвращает доступ юзера (определенного по юзернейму) к полю
+    """
     user = await get_user_by_username(username=username, db=db)
     if user is None:
         return None
@@ -86,6 +95,9 @@ async def get_access_with_username(username: str, field_id: int, db: AsyncSessio
 
 
 async def get_access_with_id(user_id: int, field_id: int, db: AsyncSession):
+    """
+    Возвращает доступ юзера (определенного по id) к полю
+    """
     res = await db.execute(select(Access).where(and_(
         Access.user_id==user_id,
         Access.field_id==field_id
@@ -94,8 +106,21 @@ async def get_access_with_id(user_id: int, field_id: int, db: AsyncSession):
 
 
 async def get_all_accesses_to_field(field_id: int, db: AsyncSession):
+    """
+    Возвращает список обьектов доступа к полю, с жадной загрузкой пользователей
+    """
     res = await db.execute(select(Access).where(Access.field_id==field_id).options(
         joinedload(Access.user)
+    ))
+    return res.scalars().all()
+
+
+async def get_user_accesses(user_id: int, db: AsyncSession):
+    """
+    Возвращает доступы пользователя к полям
+    """
+    res = await db.execute(select(Access).where(Access.user_id == user_id).options(
+        joinedload(Access.field)
     ))
     return res.scalars().all()
 

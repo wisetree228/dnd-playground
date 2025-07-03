@@ -5,7 +5,7 @@ from typing import Generator, Annotated
 from fastapi import Response, APIRouter, Depends, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from backend.db.models import engine
-from .utils import *
+from .utils import RoomManager
 from .config import security, config
 from .views import *
 from .schemas import *
@@ -104,70 +104,120 @@ async def logout(response: Response) -> dict:
 
 @router.get('/my_fields', dependencies=[Depends(security.access_token_required)])
 async def get_my_fields(db: SessionDep, user_id: str = Depends(get_current_user_id)):
+    """
+    Возвращает пользователю его поля
+    """
     return await get_my_fields_view(db=db, user_id=int(user_id))
+
+
+@router.get('/fields_accessed', dependencies=[Depends(security.access_token_required)])
+async def get_accessed_fields(db: SessionDep, user_id: str = Depends(get_current_user_id)):
+    """
+    Возвращает пользователю поля, к которым он имеет доступ
+    """
+    return await get_accessed_fields_view(db=db, user_id=int(user_id))
 
 
 @router.post('/fields', dependencies=[Depends(security.access_token_required)])
 async def create_field(data: CreateFieldFormData, db: SessionDep, user_id: str = Depends(get_current_user_id)):
+    """
+    регистрирует новое поле
+    """
     return await create_field_view(data=data, db=db, user_id=int(user_id))
 
 
 @router.put('/profile', dependencies=[Depends(security.access_token_required)])
 async def edit_profile(data: EditProfileFormData, db: SessionDep, user_id: str = Depends(get_current_user_id)):
+    """
+    редактирует профиль
+    """
     return await edit_profile_view(data=data, db=db, user_id=int(user_id))
 
 
 @router.get('/my_avatar', dependencies=[Depends(security.access_token_required)])
 async def get_avatar(db: SessionDep, user_id: str = Depends(get_current_user_id)):
+    """
+    возвращает пользователю его аватар
+    """
     return await get_avatar_view(db=db, user_id=int(user_id))
 
 
 @router.get('/avatar/{other_user_id}', dependencies=[Depends(security.access_token_required)])
 async def get_avatar(db: SessionDep, other_user_id: int, user_id: str = Depends(get_current_user_id)):
+    """
+    возвращает чей-то аватар
+    """
     return await get_avatar_view(db=db, user_id=other_user_id)
 
 
 @router.get('/profile', dependencies=[Depends(security.access_token_required)])
 async def get_profile(db: SessionDep, user_id: str = Depends(get_current_user_id)):
+    """
+    возвращает пользователю данные о его профиле
+    """
     return await get_profile_view(db=db, user_id=int(user_id))
 
 
 @router.post('/avatar', dependencies=[Depends(security.access_token_required)])
 async def change_avatar(db: SessionDep, uploaded_file: UploadFile, user_id: str = Depends(get_current_user_id)):
+    """
+    меняет аватар
+    """
     return await change_avatar_view(db=db, uploaded_file=uploaded_file, user_id=int(user_id))
 
 
 @router.get('/field/{field_id}', dependencies=[Depends(security.access_token_required)])
 async def get_field(db: SessionDep, field_id: int, user_id: str = Depends(get_current_user_id)):
+    """
+    возвращает данные поля (что там нарисовано)
+    """
     return await get_field_view(db=db, field_id=field_id, user_id=int(user_id))
 
 
 @router.post('/field/{field_id}', dependencies=[Depends(security.access_token_required)])
 async def update_field(db: SessionDep, field_id: int, data: AnyJsonResponse, user_id: str = Depends(get_current_user_id)):
+    """
+    редактриует поле, сохраняет изменение рисунка в базу данных
+    """
     return await update_field_view(db=db, field_id=field_id, data=data, user_id=int(user_id))
 
 
 @router.websocket("/ws/{room_id}")
 async def websocket_endpoint(websocket: WebSocket, room_id: str):
+    """
+    обрабатывает вебсокет-соединение когда несколько игроков рисуют на одном поле
+    """
     await handle_websocket(websocket=websocket, room_id=room_id, manager=manager)
 
 
 @router.post('/access/{field_id}', dependencies=[Depends(security.access_token_required)])
 async def create_access(data: AccessData, db: SessionDep, field_id: int, user_id: str = Depends(get_current_user_id)):
+    """
+    регистрирует доступ пользователя к полю
+    """
     return await create_access_view(data=data, db=db, user_id=int(user_id), field_id=field_id)
 
 
 @router.get('/access/{field_id}', dependencies=[Depends(security.access_token_required)])
 async def get_access(db: SessionDep, field_id: int, user_id: str = Depends(get_current_user_id)):
+    """
+    проверяет, имеет ли пользователь доступ к полю
+    """
     return await get_access_view(db=db, user_id=int(user_id), field_id=field_id)
 
 
 @router.delete('/access/{other_user_id}/{field_id}', dependencies=[Depends(security.access_token_required)])
 async def delete_access(db: SessionDep, field_id: int, other_user_id: int, user_id: str = Depends(get_current_user_id)):
+    """
+    удаляет доступ пользователя к полю
+    """
     return await delete_access_view(db=db, field_id=field_id, other_user_id=other_user_id, user_id=int(user_id))
 
 
 @router.get('/accesses/{field_id}', dependencies=[Depends(security.access_token_required)])
 async def get_accesses_for_field(field_id: int, db: SessionDep, user_id: str = Depends(get_current_user_id)):
+    """
+    возвращает список пользователей которые имеют доступ к полю
+    """
     return await get_accesses_for_field_view(field_id=field_id, db=db, user_id=int(user_id))
 

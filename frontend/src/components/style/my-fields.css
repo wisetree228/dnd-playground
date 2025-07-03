@@ -3,7 +3,7 @@
 /* Импортируем шрифт для футуристичного/минималистичного вида */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&display=swap');
 
-/* Глобальные сбросы и базовые стили (повторяем для консистентности) */
+/* Глобальные сбросы и базовые стили */
 *, *::before, *::after {
   box-sizing: border-box;
 }
@@ -20,16 +20,16 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: #0a0a1a; /* Очень темный, почти черный фон с фиолетовым оттенком */
-  color: #e0e0e0; /* Светлый текст для контраста */
+  background-color: #0a0a1a;
+  color: #e0e0e0;
 }
 
 .my-fields-header {
-  background-color: #1a0f2b; /* Темный пурпурный цвет для шапки */
+  background-color: #1a0f2b;
   color: #f0f0f0;
   padding: 20px 30px;
   display: flex;
-  justify-content: space-between; /* Заголовок слева, кнопка справа */
+  justify-content: space-between;
   align-items: center;
   box-shadow: 0 0 15px rgba(147, 112, 219, 0.4);
   border-bottom: 1px solid rgba(147, 112, 219, 0.2);
@@ -41,11 +41,11 @@ body {
   font-weight: 700;
   letter-spacing: 1.5px;
   text-shadow: 0 0 10px rgba(147, 112, 219, 0.7);
-  color: #9370DB; /* Средний пурпурный */
+  color: #9370DB;
 }
 
-.profile-button {
-  background: linear-gradient(45deg, #8A2BE2, #9370DB); /* Градиент как на кнопке логина */
+.profile-button, .add-field-button {
+  background: linear-gradient(45deg, #8A2BE2, #9370DB);
   color: white;
   padding: 12px 22px;
   border: none;
@@ -57,53 +57,59 @@ body {
   box-shadow: 0 5px 15px rgba(138, 43, 226, 0.3);
   display: flex;
   align-items: center;
-  gap: 8px; /* Отступ между иконкой и текстом */
+  gap: 8px;
 }
 
-.profile-button .button-icon {
+.add-field-button {
+  background: linear-gradient(45deg, #7B68EE, #8A2BE2);
+  margin-right: 15px;
+}
+
+.profile-button .button-icon, .add-field-button .button-icon {
   font-size: 1.2em;
 }
 
-.profile-button:hover {
+.profile-button:hover, .add-field-button:hover {
   background: linear-gradient(45deg, #9370DB, #8A2BE2);
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(138, 43, 226, 0.5);
 }
 
-.profile-button:active {
+.profile-button:active, .add-field-button:active {
   transform: translateY(0);
   box-shadow: 0 3px 10px rgba(138, 43, 226, 0.3);
 }
 
 .my-fields-main-content {
   flex-grow: 1;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start; /* Выравнивание по верху, а не по центру */
-  padding: 40px 20px; /* Увеличим верхний отступ */
+  padding: 40px 20px;
+  max-width: 800px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.fields-section {
+  margin-bottom: 40px;
+}
+
+.fields-section h2 {
+  color: #9370DB;
+  font-size: 1.8em;
+  margin-bottom: 20px;
+  text-shadow: 0 0 8px rgba(147, 112, 219, 0.6);
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(147, 112, 219, 0.3);
 }
 
 .fields-list-container {
   background-color: rgba(20, 0, 40, 0.8);
-  padding: 40px;
+  padding: 30px;
   border-radius: 12px;
   box-shadow: 0 0 40px rgba(138, 43, 226, 0.4),
               inset 0 0 15px rgba(147, 112, 219, 0.2);
   border: 1px solid rgba(147, 112, 219, 0.3);
-  width: 100%;
-  max-width: 600px; /* Шире для списка */
-  text-align: center;
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
-}
-
-.fields-list-container h2 { /* Если бы был h2 внутри контейнера */
-  margin-top: 0;
-  margin-bottom: 30px;
-  color: #9370DB;
-  font-size: 2em;
-  font-weight: 700;
-  text-shadow: 0 0 8px rgba(147, 112, 219, 0.6);
 }
 
 .loading-message,
@@ -118,32 +124,32 @@ body {
 }
 
 .error-message {
-  color: #ff6b6b; /* Красный для ошибок */
+  color: #ff6b6b;
   border-color: #ff6b6b;
   box-shadow: 0 0 15px rgba(255, 107, 107, 0.3);
 }
 
 .field-list {
-  list-style: none; /* Убираем стандартные маркеры списка */
+  list-style: none;
   padding: 0;
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 15px; /* Отступ между элементами списка */
+  gap: 15px;
 }
 
 .field-item {
-  background-color: rgba(30, 5, 60, 0.7); /* Темно-пурпурный фон для каждого элемента */
+  background-color: rgba(30, 5, 60, 0.7);
   border-radius: 10px;
-  overflow: hidden; /* Для border-radius на дочернем Link */
+  overflow: hidden;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   border: 1px solid rgba(147, 112, 219, 0.2);
 }
 
 .field-item:hover {
-  transform: translateY(-5px); /* Эффект поднятия при наведении */
+  transform: translateY(-5px);
   box-shadow: 0 10px 25px rgba(138, 43, 226, 0.4),
-              inset 0 0 10px rgba(147, 112, 219, 0.3); /* Внутреннее свечение */
+              inset 0 0 10px rgba(147, 112, 219, 0.3);
 }
 
 .field-link {
@@ -151,15 +157,15 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  text-decoration: none; /* Убираем подчеркивание у ссылки */
-  color: #f0f0f0; /* Цвет текста ссылки */
+  text-decoration: none;
+  color: #f0f0f0;
   font-size: 1.2em;
   font-weight: 600;
   transition: color 0.3s ease;
 }
 
 .field-link:hover {
-  color: #8A2BE2; /* Яркий фиолетовый при наведении на текст */
+  color: #8A2BE2;
 }
 
 .field-name {
@@ -171,13 +177,13 @@ body {
 
 .arrow-icon {
   font-size: 1.5em;
-  color: #9370DB; /* Пурпурная стрелка */
+  color: #9370DB;
   transition: transform 0.3s ease, color 0.3s ease;
 }
 
 .field-item:hover .arrow-icon {
-  transform: translateX(5px); /* Стрелка сдвигается вправо при наведении */
-  color: #8A2BE2; /* Яркий фиолетовый при наведении */
+  transform: translateX(5px);
+  color: #8A2BE2;
 }
 
 /* Адаптивность для маленьких экранов */
@@ -193,10 +199,11 @@ body {
     font-size: 2em;
   }
 
-  .profile-button {
-    align-self: flex-end; /* Кнопка остается справа, если шапка в колонке */
+  .profile-button, .add-field-button {
+    align-self: stretch;
     padding: 10px 18px;
     font-size: 0.9em;
+    justify-content: center;
   }
 
   .my-fields-main-content {
@@ -204,8 +211,7 @@ body {
   }
 
   .fields-list-container {
-    padding: 30px 20px;
-    max-width: 95%;
+    padding: 25px 15px;
   }
 
   .field-link {
@@ -219,64 +225,17 @@ body {
     font-size: 1.8em;
   }
 
-  .profile-button {
+  .profile-button, .add-field-button {
     font-size: 0.85em;
     padding: 8px 15px;
   }
 
   .fields-list-container {
-    padding: 25px 15px;
+    padding: 20px 12px;
   }
 
   .field-link {
     font-size: 1em;
-    padding: 12px 18px;
-  }
-}
-
-.add-field-button {
-  background: linear-gradient(45deg, #7B68EE, #8A2BE2); /* Футуристичный градиент от MediumSlateBlue до BlueViolet */
-  color: white;
-  padding: 12px 22px;
-  border: none;
-  border-radius: 8px; /* Немного скругленные углы */
-  font-size: 1em;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease; /* Плавный переход для hover-эффектов */
-  box-shadow: 0 5px 15px rgba(123, 104, 238, 0.3); /* Тень в тон градиента для эффекта свечения */
-  display: flex; /* Для выравнивания иконки и текста */
-  align-items: center;
-  gap: 8px; /* Отступ между иконкой и текстом */
-  white-space: nowrap; /* Предотвращает перенос текста на маленьких экранах */
-  /* Если кнопки не выстраиваются в ряд, возможно, вам потребуется обернуть их в общий div
-     и применить к родительскому элементу (например, header) display: flex; */
-}
-
-.add-field-button .button-icon {
-  font-size: 1.2em; /* Размер иконки */
-}
-
-/* Эффекты при наведении */
-.add-field-button:hover {
-  background: linear-gradient(45deg, #8A2BE2, #7B68EE); /* Обратный градиент при наведении */
-  transform: translateY(-2px); /* Легкий подъем кнопки */
-  box-shadow: 0 8px 20px rgba(123, 104, 238, 0.5); /* Усиленная тень */
-}
-
-/* Эффекты при нажатии */
-.add-field-button:active {
-  transform: translateY(0); /* Возврат в исходное положение */
-  box-shadow: 0 3px 10px rgba(123, 104, 238, 0.3); /* Меньшая тень при нажатии */
-}
-
-/* Пример адаптивности (если требуется, добавьте в существующие медиа-запросы) */
-@media (max-width: 768px) {
-  .add-field-button {
-    padding: 10px 18px;
-    font-size: 0.9em;
-    /* Если кнопки не выстраиваются в ряд на маленьких экранах,
-       возможно, потребуется добавить width: 100%; и/или flex-direction: column;
-       к их родительскому контейнеру в шапке. */
+    padding: 12px 15px;
   }
 }
